@@ -18,7 +18,12 @@ export async function updateProfile(userId: string, input: UpdateVolunteerProfil
     await disasterRepo.createVolunteer({ userId });
   }
 
-  const [updated] = await disasterRepo.updateVolunteer(userId, input);
+  const data: Record<string, unknown> = { ...input };
+  // Sync status when availability changes
+  if (input.isAvailable === true) data.status = "available";
+  else if (input.isAvailable === false) data.status = "unavailable";
+
+  const [updated] = await disasterRepo.updateVolunteer(userId, data);
   if (!updated) throw new ServiceError(500, "Failed to update volunteer profile");
   return updated;
 }

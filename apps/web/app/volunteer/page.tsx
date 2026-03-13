@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useVolunteerProfile, useUpdateVolunteerProfile } from "@/lib/queries/volunteer";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -22,8 +21,8 @@ export default function VolunteerPage() {
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
   const [isAvailable, setIsAvailable] = useState(true);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [saved, setSaved] = useState(false);
+  const hydrated = useRef(false);
 
   useEffect(() => {
     if (profile) {
@@ -31,38 +30,52 @@ export default function VolunteerPage() {
       if (profile.latitude != null) setLatitude(String(profile.latitude));
       if (profile.longitude != null) setLongitude(String(profile.longitude));
       setIsAvailable(profile.isAvailable);
+      // Mark hydrated after state is set
+      setTimeout(() => { hydrated.current = true; }, 0);
     }
   }, [profile]);
 
+  const save = useCallback(
+    (patch: { skills?: string[]; latitude?: number; longitude?: number; isAvailable?: boolean }) => {
+      if (!hydrated.current) return;
+      setSaved(false);
+      updateMutation.mutate(patch, {
+        onSuccess: () => {
+          setSaved(true);
+          setTimeout(() => setSaved(false), 1500);
+        },
+      });
+    },
+    [updateMutation],
+  );
+
   function toggleSkill(skill: string) {
-    setSkills((prev) => (prev.includes(skill) ? prev.filter((s) => s !== skill) : [...prev, skill]));
+    const next = skills.includes(skill) ? skills.filter((s) => s !== skill) : [...skills, skill];
+    setSkills(next);
+    save({ skills: next });
+  }
+
+  function handleAvailability() {
+    const next = !isAvailable;
+    setIsAvailable(next);
+    save({ isAvailable: next });
+  }
+
+  function handleLocationSelect(lat: string, lng: string) {
+    setLatitude(lat);
+    setLongitude(lng);
+    save({ latitude: Number(lat), longitude: Number(lng) });
   }
 
   function detectLocation() {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        setLatitude(String(pos.coords.latitude));
-        setLongitude(String(pos.coords.longitude));
-      },
-      () => setError("Could not detect location."),
-    );
-  }
-
-  function handleSave(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
-    updateMutation.mutate(
-      {
-        skills,
-        latitude: latitude ? Number(latitude) : undefined,
-        longitude: longitude ? Number(longitude) : undefined,
-        isAvailable,
-      },
-      {
-        onSuccess: () => setSuccess("Profile updated successfully"),
-        onError: (err) => setError(err.message),
+        const lat = String(pos.coords.latitude);
+        const lng = String(pos.coords.longitude);
+        setLatitude(lat);
+        setLongitude(lng);
+        save({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
       },
     );
   }
@@ -82,89 +95,68 @@ export default function VolunteerPage() {
       <div className="container mx-auto max-w-xl space-y-6 p-6">
         <Card>
           <CardHeader>
-            <CardTitle>Volunteer Profile</CardTitle>
-            <CardDescription>Set your skills, location, and availability to get matched with disaster zones.</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Volunteer Profile</CardTitle>
+                <CardDescription>Set your skills, location, and availability to get matched with disaster zones.</CardDescription>
+              </div>
+              {updateMutation.isPending && (
+                <span className="text-xs text-muted-foreground">Saving...</span>
+              )}
+              {saved && (
+                <span className="text-xs text-green-600">Saved</span>
+              )}
+            </div>
           </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSave} className="space-y-5">
-              {/* Availability */}
-              <div className="flex items-center justify-between">
-                <Label>Availability</Label>
-                <Button
-                  type="button"
-                  variant={isAvailable ? "default" : "secondary"}
-                  size="sm"
-                  onClick={() => setIsAvailable(!isAvailable)}
-                >
-                  {isAvailable ? "Available" : "Unavailable"}
+          <CardContent className="space-y-5">
+            {/* Availability */}
+            <div className="flex items-center justify-between">
+              <Label>Availability</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className={isAvailable ? "border-green-500 bg-green-50 text-green-700 hover:bg-green-100" : "border-gray-300 text-gray-500 hover:bg-gray-100"}
+                onClick={handleAvailability}
+              >
+                {isAvailable ? "Ready to Help" : "Not Available"}
+              </Button>
+            </div>
+
+            {/* Skills */}
+            <div className="space-y-2">
+              <Label>Skills</Label>
+              <div className="flex flex-wrap gap-2">
+                {ALL_SKILLS.map((skill) => (
+                  <Badge
+                    key={skill}
+                    variant={skills.includes(skill) ? "default" : "outline"}
+                    className="cursor-pointer select-none"
+                    onClick={() => toggleSkill(skill)}
+                  >
+                    {skill.replace("_", " ")}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            {/* Location */}
+            <div className="space-y-2">
+              <Label>Location</Label>
+              <div className="flex items-center gap-2">
+                <LocationPickerModal
+                  latitude={latitude}
+                  longitude={longitude}
+                  onSelect={handleLocationSelect}
+                />
+                <Button type="button" variant="outline" size="sm" onClick={detectLocation}>
+                  Detect my location
                 </Button>
               </div>
-
-              {/* Skills */}
-              <div className="space-y-2">
-                <Label>Skills</Label>
-                <div className="flex flex-wrap gap-2">
-                  {ALL_SKILLS.map((skill) => (
-                    <Badge
-                      key={skill}
-                      variant={skills.includes(skill) ? "default" : "outline"}
-                      className="cursor-pointer select-none"
-                      onClick={() => toggleSkill(skill)}
-                    >
-                      {skill.replace("_", " ")}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              {/* Location */}
-              <div className="space-y-2">
-                <Label>Location</Label>
-                <div className="flex items-center gap-2">
-                  <LocationPickerModal
-                    latitude={latitude}
-                    longitude={longitude}
-                    onSelect={(lat, lng) => { setLatitude(lat); setLongitude(lng); }}
-                  />
-                  <Button type="button" variant="outline" size="sm" onClick={detectLocation}>
-                    Detect my location
-                  </Button>
-                </div>
-              </div>
-
-              {error && <p className="text-sm text-destructive">{error}</p>}
-              {success && <p className="text-sm text-green-600">{success}</p>}
-
-              <Button type="submit" className="w-full" disabled={updateMutation.isPending}>
-                {updateMutation.isPending ? "Saving..." : "Save Profile"}
-              </Button>
-            </form>
+            </div>
           </CardContent>
         </Card>
 
-        {profile && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Current Profile</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Status</span>
-                <Badge variant={profile.isAvailable ? "default" : "secondary"}>
-                  {profile.status}
-                </Badge>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Skills</span>
-                <span>{profile.skills.length > 0 ? profile.skills.join(", ") : "None"}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Location</span>
-                <span>{profile.latitude != null ? `${profile.latitude}, ${profile.longitude}` : "Not set"}</span>
-              </div>
-            </CardContent>
-          </Card>
-        )}
       </div>
     </div>
   );

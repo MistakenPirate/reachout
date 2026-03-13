@@ -63,7 +63,7 @@ function OverviewCards() {
     { label: "Pending Requests", value: s.pendingRequests, color: "text-amber-600" },
     { label: "In Progress", value: s.inProgressRequests, color: "text-blue-600" },
     { label: "Available Volunteers", value: s.availableVolunteers, color: "text-green-600" },
-    { label: "On Mission", value: s.onMissionVolunteers, color: "text-purple-600" },
+    { label: "Deployed", value: s.onMissionVolunteers, color: "text-purple-600" },
     { label: "Total Resources", value: s.totalResources, color: "text-foreground" },
   ];
 
@@ -195,7 +195,7 @@ function VolunteersPanel() {
           <SelectContent>
             <SelectItem value="all">All</SelectItem>
             <SelectItem value="available">Available</SelectItem>
-            <SelectItem value="on_mission">On Mission</SelectItem>
+            <SelectItem value="on_mission">Deployed</SelectItem>
             <SelectItem value="unavailable">Unavailable</SelectItem>
           </SelectContent>
         </Select>
@@ -211,8 +211,8 @@ function VolunteersPanel() {
                 {vol.latitude != null ? ` ${vol.latitude.toFixed(2)}, ${vol.longitude?.toFixed(2)}` : " No location"}
               </p>
             </div>
-            <Badge variant={vol.isAvailable ? "default" : "secondary"}>
-              {vol.status.replace("_", " ")}
+            <Badge variant={vol.status === "on_mission" ? "destructive" : vol.isAvailable ? "default" : "secondary"}>
+              {vol.status === "on_mission" ? "Deployed" : vol.isAvailable ? "Ready to Help" : "Not Available"}
             </Badge>
           </div>
         ))}
