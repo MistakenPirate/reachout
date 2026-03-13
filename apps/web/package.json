@@ -13,13 +13,16 @@
   "dependencies": {
     "@repo/shared": "workspace:^",
     "@repo/ui": "workspace:*",
+    "leaflet": "^1.9.4",
     "next": "16.1.5",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "react-leaflet": "^5.0.0"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
+    "@types/leaflet": "^1.9.21",
     "@types/node": "^22.15.3",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",

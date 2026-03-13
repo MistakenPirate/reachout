@@ -1,7 +1,10 @@
 import "dotenv/config";
+import { createServer } from "node:http";
 import express from "express";
 import cors from "cors";
 import authRoutes from "./routes/auth.js";
+import disasterRoutes from "./routes/disaster.js";
+import { initWebSocket } from "./ws.js";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -14,7 +17,11 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/disaster", disasterRoutes);
 
-app.listen(PORT, () => {
+const server = createServer(app);
+initWebSocket(server);
+
+server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
