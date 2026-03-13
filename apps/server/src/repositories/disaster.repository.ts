@@ -210,6 +210,27 @@ export function findHelpRequestWithVolunteer(requestId: string) {
     .where(eq(helpRequests.id, requestId));
 }
 
+export function findHelpRequestsAssignedToVolunteer(volunteerUserId: string) {
+  return db
+    .select({
+      id: helpRequests.id,
+      latitude: helpRequests.latitude,
+      longitude: helpRequests.longitude,
+      emergencyType: helpRequests.emergencyType,
+      peopleCount: helpRequests.peopleCount,
+      description: helpRequests.description,
+      status: helpRequests.status,
+      priorityScore: helpRequests.priorityScore,
+      createdAt: helpRequests.createdAt,
+      updatedAt: helpRequests.updatedAt,
+      userName: users.name,
+      userPhone: users.phone,
+    })
+    .from(helpRequests)
+    .leftJoin(users, eq(helpRequests.userId, users.id))
+    .where(eq(helpRequests.assignedVolunteerId, volunteerUserId));
+}
+
 export function findUserById(userId: string) {
   return db
     .select({ id: users.id, name: users.name, phone: users.phone })

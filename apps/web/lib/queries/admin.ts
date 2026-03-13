@@ -89,6 +89,7 @@ export function useAssignVolunteer() {
     mutationFn: assignVolunteerToRequest,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-pending-requests"] });
+      qc.invalidateQueries({ queryKey: ["admin-dashboard"] });
       qc.invalidateQueries({ queryKey: ["map-data"] });
     },
   });
@@ -99,6 +100,7 @@ export function useCreateZone() {
   return useMutation({
     mutationFn: createZone,
     onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-dashboard"] });
       qc.invalidateQueries({ queryKey: ["map-data"] });
     },
   });
@@ -120,6 +122,7 @@ export function useAllocateResource() {
   return useMutation({
     mutationFn: allocateResource,
     onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-dashboard"] });
       qc.invalidateQueries({ queryKey: ["map-data"] });
       qc.invalidateQueries({ queryKey: ["admin-resources"] });
     },

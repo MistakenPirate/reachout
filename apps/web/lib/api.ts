@@ -106,3 +106,20 @@ export async function updateVolunteerProfile(data: {
   if (!res.ok) throw new Error(typeof json.error === "string" ? json.error : "Failed to update profile");
   return json;
 }
+
+export async function fetchVolunteerMissions() {
+  const res = await fetch(`${API_URL}/api/volunteers/missions`, { headers: authHeaders() });
+  if (!res.ok) throw new Error("Failed to fetch missions");
+  return res.json();
+}
+
+export async function updateMissionStatus(id: string, status: string) {
+  const res = await fetch(`${API_URL}/api/volunteers/missions/${id}/status`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ status }),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(typeof json.error === "string" ? json.error : "Failed to update mission");
+  return json;
+}

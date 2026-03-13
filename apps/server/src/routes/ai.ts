@@ -10,7 +10,7 @@ router.post("/prioritize", authenticate, authorize("admin"), aiController.priori
 // AI social media summary (admin only)
 router.post("/summarize", authenticate, authorize("admin"), aiController.summarizeSocialMedia);
 
-// AI chatbot (victims)
-router.post("/chat", authenticate, authorize("victim"), aiController.chat);
+// AI chatbot (victims & volunteers)
+router.post("/chat", authenticate, authorize("victim", "volunteer"), aiController.chat);
 
 export default router;
