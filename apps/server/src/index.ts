@@ -4,6 +4,8 @@ import express from "express";
 import cors from "cors";
 import authRoutes from "./routes/auth.js";
 import disasterRoutes from "./routes/disaster.js";
+import helpRequestRoutes from "./routes/helpRequest.js";
+import volunteerRoutes from "./routes/volunteer.js";
 import { initWebSocket } from "./ws.js";
 
 const app = express();
@@ -18,6 +20,8 @@ app.get("/api/health", (_req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/disaster", disasterRoutes);
+app.use("/api/help-requests", helpRequestRoutes);
+app.use("/api/volunteers", volunteerRoutes);
 
 const server = createServer(app);
 initWebSocket(server);

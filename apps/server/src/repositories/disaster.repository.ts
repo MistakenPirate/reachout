@@ -55,3 +55,46 @@ export function findAllResources() {
 export function createResource(data: typeof resources.$inferInsert) {
   return db.insert(resources).values(data).returning();
 }
+
+// -- Help Requests --
+
+export function createHelpRequest(data: typeof helpRequests.$inferInsert) {
+  return db.insert(helpRequests).values(data).returning();
+}
+
+export function findHelpRequestsByUser(userId: string) {
+  return db.select().from(helpRequests).where(eq(helpRequests.userId, userId));
+}
+
+export function findHelpRequestById(id: string) {
+  return db.select().from(helpRequests).where(eq(helpRequests.id, id));
+}
+
+export function updateHelpRequestStatus(id: string, status: string) {
+  return db
+    .update(helpRequests)
+    .set({ status: status as "pending" | "assigned" | "in_progress" | "resolved", updatedAt: new Date() })
+    .where(eq(helpRequests.id, id))
+    .returning();
+}
+
+// -- Volunteers --
+
+export function findVolunteerByUserId(userId: string) {
+  return db.select().from(volunteers).where(eq(volunteers.userId, userId));
+}
+
+export function createVolunteer(data: typeof volunteers.$inferInsert) {
+  return db.insert(volunteers).values(data).returning();
+}
+
+export function updateVolunteer(
+  userId: string,
+  data: Partial<Pick<typeof volunteers.$inferInsert, "skills" | "latitude" | "longitude" | "isAvailable" | "status">>,
+) {
+  return db
+    .update(volunteers)
+    .set({ ...data, updatedAt: new Date() })
+    .where(eq(volunteers.userId, userId))
+    .returning();
+}

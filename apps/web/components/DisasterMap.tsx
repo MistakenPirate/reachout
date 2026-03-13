@@ -3,7 +3,7 @@
 import { MapContainer, TileLayer, Circle, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import type { MapData } from "../lib/useMapData";
+import type { MapData } from "../lib/queries/map";
 
 // Fix default marker icons in Next.js
 const victimIcon = new L.Icon({
