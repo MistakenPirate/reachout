@@ -1,21 +1,20 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParam } from "@/lib/useSearchParam";
 import { useVolunteerProfile, useUpdateVolunteerProfile, useVolunteerMissions, useUpdateMissionStatus } from "@/lib/queries/volunteer";
-import { useChatbot, type ChatMessage } from "@/lib/queries/ai";
 import { useMapData } from "@/lib/queries/map";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import dynamic from "next/dynamic";
 
 const LocationPickerModal = dynamic(() => import("@/components/LocationPickerModal"), { ssr: false });
 const DisasterMap = dynamic(() => import("@/components/DisasterMap"), { ssr: false });
+const ChatPanel = dynamic(() => import("@/components/ChatPanel"), { ssr: false });
 
 const ALL_SKILLS = ["medical", "search_rescue", "transport", "food", "shelter"] as const;
 
@@ -42,7 +41,10 @@ export default function VolunteerPage() {
           </TabsContent>
 
           <TabsContent value="chat">
-            <ChatPanel />
+            <ChatPanel
+              description="Get guidance on emergency response, first aid, and safety procedures."
+              emptyMessage="Ask about emergency procedures, first aid, or disaster response best practices."
+            />
           </TabsContent>
         </Tabs>
       </div>
@@ -59,7 +61,7 @@ function ProfilePanel() {
   const [longitude, setLongitude] = useState("");
   const [isAvailable, setIsAvailable] = useState(true);
   const [saved, setSaved] = useState(false);
-  const hydrated = useRef(false);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -67,13 +69,13 @@ function ProfilePanel() {
       if (profile.latitude != null) setLatitude(String(profile.latitude));
       if (profile.longitude != null) setLongitude(String(profile.longitude));
       setIsAvailable(profile.isAvailable);
-      setTimeout(() => { hydrated.current = true; }, 0);
+      setHydrated(true);
     }
   }, [profile]);
 
   const save = useCallback(
     (patch: { skills?: string[]; latitude?: number; longitude?: number; isAvailable?: boolean }) => {
-      if (!hydrated.current) return;
+      if (!hydrated) return;
       setSaved(false);
       updateMutation.mutate(patch, {
         onSuccess: () => {
@@ -82,7 +84,7 @@ function ProfilePanel() {
         },
       });
     },
-    [updateMutation],
+    [hydrated, updateMutation],
   );
 
   function toggleSkill(skill: string) {
@@ -186,8 +188,11 @@ function MissionsPanel() {
   const updateStatus = useUpdateMissionStatus();
   const { data: mapData } = useMapData();
 
-  const activeMissions = missions.filter((m) => m.status !== "resolved");
-  const completedMissions = missions.filter((m) => m.status === "resolved");
+  const [activeMissions, completedMissions] = useMemo(() => {
+    const active = missions.filter((m) => m.status !== "resolved");
+    const completed = missions.filter((m) => m.status === "resolved");
+    return [active, completed] as const;
+  }, [missions]);
 
   return (
     <div className="space-y-6 pt-4">
@@ -298,78 +303,6 @@ function MissionsPanel() {
           </CardContent>
         </Card>
       )}
-    </div>
-  );
-}
-
-function ChatPanel() {
-  const chatMutation = useChatbot();
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [chatInput, setChatInput] = useState("");
-  const chatEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  function handleChat(e: React.FormEvent) {
-    e.preventDefault();
-    if (!chatInput.trim()) return;
-    const userMsg: ChatMessage = { role: "user", content: chatInput.trim() };
-    const updatedMessages = [...messages, userMsg];
-    setMessages(updatedMessages);
-    setChatInput("");
-    chatMutation.mutate(
-      { messages: updatedMessages },
-      {
-        onSuccess: (reply) => {
-          setMessages((prev) => [...prev, reply]);
-        },
-      },
-    );
-  }
-
-  return (
-    <div className="pt-4">
-      <Card className="flex flex-col" style={{ height: "70vh" }}>
-        <CardHeader className="shrink-0">
-          <CardTitle>AI Emergency Assistant</CardTitle>
-          <CardDescription>Get guidance on emergency response, first aid, and safety procedures.</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-1 flex-col overflow-hidden">
-          <div className="flex-1 overflow-y-auto space-y-3 mb-4 pr-1">
-            {messages.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-8">
-                Ask about emergency procedures, first aid, or disaster response best practices.
-              </p>
-            )}
-            {messages.map((msg, i) => (
-              <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                <div className={`rounded-lg px-3 py-2 max-w-[80%] text-sm ${msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
-                  {msg.content}
-                </div>
-              </div>
-            ))}
-            {chatMutation.isPending && (
-              <div className="flex justify-start">
-                <div className="rounded-lg px-3 py-2 bg-muted text-sm text-muted-foreground">Thinking...</div>
-              </div>
-            )}
-            <div ref={chatEndRef} />
-          </div>
-          <form onSubmit={handleChat} className="flex gap-2 shrink-0">
-            <Input
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              placeholder="Type your message..."
-              disabled={chatMutation.isPending}
-            />
-            <Button type="submit" disabled={chatMutation.isPending || !chatInput.trim()}>
-              Send
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
     </div>
   );
 }

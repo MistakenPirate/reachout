@@ -1,24 +1,29 @@
 import type { RequestHandler } from "express";
 import * as aiService from "../services/ai.service.js";
 import * as disasterRepo from "../repositories/disaster.repository.js";
+import * as adminService from "../services/admin.service.js";
 
 export const prioritizeRequests: RequestHandler = async (_req, res) => {
-  const allRequests = await disasterRepo.findAllHelpRequestsFull();
-  const pending = allRequests.filter((r) => r.status === "pending");
+  try {
+    const pending = await adminService.getAllPendingRequests();
 
-  if (pending.length === 0) {
-    res.json([]);
-    return;
+    if (pending.length === 0) {
+      res.json([]);
+      return;
+    }
+
+    const results = await aiService.prioritizeRequests(pending);
+
+    // Update scores in DB
+    await Promise.all(
+      results.map((r) => disasterRepo.updateHelpRequestPriority(r.requestId, r.score)),
+    );
+
+    res.json(results);
+  } catch (err) {
+    console.error("[AI prioritize] error:", err);
+    res.status(500).json({ error: "Failed to prioritize requests" });
   }
-
-  const results = await aiService.prioritizeRequests(pending);
-
-  // Update scores in DB
-  await Promise.all(
-    results.map((r) => disasterRepo.updateHelpRequestPriority(r.requestId, r.score)),
-  );
-
-  res.json(results);
 };
 
 export const summarizeSocialMedia: RequestHandler = async (req, res) => {
@@ -28,8 +33,13 @@ export const summarizeSocialMedia: RequestHandler = async (req, res) => {
     return;
   }
 
-  const summary = await aiService.summarizeSocialMedia(keyword);
-  res.json(summary);
+  try {
+    const summary = await aiService.summarizeSocialMedia(keyword);
+    res.json(summary);
+  } catch (err) {
+    console.error("[AI summarize] error:", err);
+    res.status(500).json({ error: "Failed to generate summary" });
+  }
 };
 
 export const chat: RequestHandler = async (req, res) => {
@@ -39,6 +49,11 @@ export const chat: RequestHandler = async (req, res) => {
     return;
   }
 
-  const reply = await aiService.chatWithVictim(messages, emergencyType);
-  res.json({ role: "assistant", content: reply });
+  try {
+    const reply = await aiService.chatWithVictim(messages, emergencyType);
+    res.json({ role: "assistant", content: reply });
+  } catch (err) {
+    console.error("[AI chat] error:", err);
+    res.status(500).json({ error: "Failed to get AI response" });
+  }
 };

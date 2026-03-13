@@ -1,50 +1,17 @@
 "use client";
 
 import { MapContainer, TileLayer, Circle, Marker, Popup } from "react-leaflet";
-import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { MapData } from "../lib/queries/map";
 import LocateControl from "./LocateControl";
-
-// Fix default marker icons in Next.js
-const victimIcon = new L.Icon({
-  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-});
-
-const volunteerIcon = new L.Icon({
-  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-});
-
-const resourceIcon = new L.Icon({
-  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-});
-
-const severityColors: Record<string, string> = {
-  critical: "#dc2626",
-  high: "#ea580c",
-  medium: "#f59e0b",
-  low: "#22c55e",
-};
+import { DEFAULT_MAP_CENTER, mapIcons, severityColors } from "@/lib/map";
 
 interface DisasterMapProps {
   data: MapData;
 }
 
 export default function DisasterMap({ data }: DisasterMapProps) {
-  // Center on India by default
-  const center: [number, number] = [20.5937, 78.9629];
+  const center = DEFAULT_MAP_CENTER;
 
   return (
     <MapContainer
@@ -88,7 +55,7 @@ export default function DisasterMap({ data }: DisasterMapProps) {
 
       {/* Victim help requests */}
       {data.helpRequests.map((req) => (
-        <Marker key={req.id} position={[req.latitude, req.longitude]} icon={victimIcon}>
+        <Marker key={req.id} position={[req.latitude, req.longitude]} icon={mapIcons.victim}>
           <Popup>
             <strong>Help Request</strong>
             <br />
@@ -115,7 +82,7 @@ export default function DisasterMap({ data }: DisasterMapProps) {
           <Marker
             key={vol.id}
             position={[vol.latitude!, vol.longitude!]}
-            icon={volunteerIcon}
+            icon={mapIcons.volunteer}
           >
             <Popup>
               <strong>Volunteer</strong>
@@ -130,7 +97,7 @@ export default function DisasterMap({ data }: DisasterMapProps) {
 
       {/* Resources */}
       {data.resources.map((res) => (
-        <Marker key={res.id} position={[res.latitude, res.longitude]} icon={resourceIcon}>
+        <Marker key={res.id} position={[res.latitude, res.longitude]} icon={mapIcons.resource}>
           <Popup>
             <strong>{res.name}</strong>
             <br />

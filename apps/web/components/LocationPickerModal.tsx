@@ -2,18 +2,11 @@
 
 import { useState, useCallback } from "react";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
-import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Button } from "./ui/button";
 import LocateControl from "./LocateControl";
-
-const pinIcon = new L.Icon({
-  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-});
+import { DEFAULT_MAP_CENTER, mapIcons } from "@/lib/map";
 
 function ClickHandler({ onSelect }: { onSelect: (lat: number, lng: number) => void }) {
   useMapEvents({
@@ -47,7 +40,7 @@ export default function LocationPickerModal({ latitude, longitude, onSelect }: L
     }
   }
 
-  const center: [number, number] = pin ?? [20.5937, 78.9629];
+  const center: [number, number] = pin ?? DEFAULT_MAP_CENTER;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -69,7 +62,7 @@ export default function LocationPickerModal({ latitude, longitude, onSelect }: L
             <ClickHandler onSelect={handleClick} />
             <LocateControl onLocate={handleClick} />
 
-            {pin && <Marker position={pin} icon={pinIcon} />}
+            {pin && <Marker position={pin} icon={mapIcons.pin} />}
           </MapContainer>
         </div>
         <div className="flex items-center justify-between">

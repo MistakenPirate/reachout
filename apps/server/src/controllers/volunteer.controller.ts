@@ -52,8 +52,8 @@ export const updateMissionStatus: RequestHandler = async (req, res) => {
   }
 
   // Verify this mission is assigned to this volunteer
-  const missions = await disasterRepo.findHelpRequestsAssignedToVolunteer(req.user.userId);
-  if (!missions.find((m) => m.id === id)) {
+  const [request] = await disasterRepo.findHelpRequestById(id);
+  if (!request || request.assignedVolunteerId !== req.user.userId) {
     res.status(403).json({ error: "Not your mission" });
     return;
   }

@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { useSearchParam } from "@/lib/useSearchParam";
 import { useMyRequests, useCreateHelpRequest, useResolveHelpRequest } from "@/lib/queries/helpRequests";
 import { useRescueStatus } from "@/lib/queries/rescue";
-import { useChatbot, type ChatMessage } from "@/lib/queries/ai";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import dynamic from "next/dynamic";
 
 const LocationPickerModal = dynamic(() => import("@/components/LocationPickerModal"), { ssr: false });
+const ChatPanel = dynamic(() => import("@/components/ChatPanel"), { ssr: false });
 
 const EMERGENCY_TYPES = ["medical", "flood", "fire", "earthquake", "other"] as const;
 
@@ -34,7 +34,6 @@ export default function VictimPage() {
   const createMutation = useCreateHelpRequest();
   const resolveMutation = useResolveHelpRequest();
   const { data: rescueStatuses = [], isLoading: rescueLoading } = useRescueStatus();
-  const chatMutation = useChatbot();
 
   const [latitude, setLatitude] = useState<string>("");
   const [longitude, setLongitude] = useState<string>("");
@@ -42,15 +41,6 @@ export default function VictimPage() {
   const [peopleCount, setPeopleCount] = useState("1");
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
-
-  // Chatbot state
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [chatInput, setChatInput] = useState("");
-  const chatEndRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
 
   function detectLocation() {
     if (!navigator.geolocation) return;
@@ -88,24 +78,6 @@ export default function VictimPage() {
     );
   }
 
-  function handleChat(e: React.FormEvent) {
-    e.preventDefault();
-    if (!chatInput.trim()) return;
-    const userMsg: ChatMessage = { role: "user", content: chatInput.trim() };
-    const updatedMessages = [...messages, userMsg];
-    setMessages(updatedMessages);
-    setChatInput("");
-    chatMutation.mutate(
-      { messages: updatedMessages, emergencyType },
-      {
-        onSuccess: (reply) => {
-          setMessages((prev) => [...prev, reply]);
-        },
-      },
-    );
-  }
-
-  // Active (non-resolved) requests that have rescue info
   const activeRescues = rescueStatuses.filter((r) => r.status !== "resolved");
 
   return (
@@ -293,60 +265,12 @@ export default function VictimPage() {
 
           {/* Tab 3: AI Chatbot */}
           <TabsContent value="chat">
-            <div className="pt-4">
-              <Card className="flex flex-col" style={{ height: "70vh" }}>
-                <CardHeader className="shrink-0">
-                  <CardTitle>AI Emergency Assistant</CardTitle>
-                  <CardDescription>
-                    Get immediate guidance for your emergency situation.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex flex-1 flex-col overflow-hidden">
-                  <div className="flex-1 overflow-y-auto space-y-3 mb-4 pr-1">
-                    {messages.length === 0 && (
-                      <p className="text-sm text-muted-foreground text-center py-8">
-                        Describe your emergency situation and get immediate guidance.
-                      </p>
-                    )}
-                    {messages.map((msg, i) => (
-                      <div
-                        key={i}
-                        className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-                      >
-                        <div
-                          className={`rounded-lg px-3 py-2 max-w-[80%] text-sm ${
-                            msg.role === "user"
-                              ? "bg-primary text-primary-foreground"
-                              : "bg-muted"
-                          }`}
-                        >
-                          {msg.content}
-                        </div>
-                      </div>
-                    ))}
-                    {chatMutation.isPending && (
-                      <div className="flex justify-start">
-                        <div className="rounded-lg px-3 py-2 bg-muted text-sm text-muted-foreground">
-                          Thinking...
-                        </div>
-                      </div>
-                    )}
-                    <div ref={chatEndRef} />
-                  </div>
-                  <form onSubmit={handleChat} className="flex gap-2 shrink-0">
-                    <Input
-                      value={chatInput}
-                      onChange={(e) => setChatInput(e.target.value)}
-                      placeholder="Type your message..."
-                      disabled={chatMutation.isPending}
-                    />
-                    <Button type="submit" disabled={chatMutation.isPending || !chatInput.trim()}>
-                      Send
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-            </div>
+            <ChatPanel
+              title="AI Emergency Assistant"
+              description="Get immediate guidance for your emergency situation."
+              emptyMessage="Describe your emergency situation and get immediate guidance."
+              emergencyType={emergencyType}
+            />
           </TabsContent>
         </Tabs>
       </div>
