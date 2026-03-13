@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useSearchParam } from "@/lib/useSearchParam";
 import { useVolunteerProfile, useUpdateVolunteerProfile, useVolunteerMissions, useUpdateMissionStatus } from "@/lib/queries/volunteer";
 import { useChatbot, type ChatMessage } from "@/lib/queries/ai";
 import { useMapData } from "@/lib/queries/map";
@@ -19,11 +20,13 @@ const DisasterMap = dynamic(() => import("@/components/DisasterMap"), { ssr: fal
 const ALL_SKILLS = ["medical", "search_rescue", "transport", "food", "shelter"] as const;
 
 export default function VolunteerPage() {
+  const [tab, setTab] = useSearchParam("tab", "profile");
+
   return (
     <div className="min-h-screen">
       <Navbar />
       <div className="container mx-auto max-w-4xl p-6">
-        <Tabs defaultValue="profile">
+        <Tabs value={tab} onValueChange={(v) => setTab(String(v))}>
           <TabsList>
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="missions">Missions</TabsTrigger>

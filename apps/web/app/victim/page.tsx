@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useSearchParam } from "@/lib/useSearchParam";
 import { useMyRequests, useCreateHelpRequest, useResolveHelpRequest } from "@/lib/queries/helpRequests";
 import { useRescueStatus } from "@/lib/queries/rescue";
 import { useChatbot, type ChatMessage } from "@/lib/queries/ai";
@@ -28,6 +29,7 @@ const statusVariant: Record<string, "default" | "secondary" | "destructive" | "o
 };
 
 export default function VictimPage() {
+  const [tab, setTab] = useSearchParam("tab", "request");
   const { data: requests = [], isLoading } = useMyRequests();
   const createMutation = useCreateHelpRequest();
   const resolveMutation = useResolveHelpRequest();
@@ -110,7 +112,7 @@ export default function VictimPage() {
     <div className="min-h-screen">
       <Navbar />
       <div className="container mx-auto max-w-3xl space-y-6 p-6">
-        <Tabs defaultValue="request">
+        <Tabs value={tab} onValueChange={(v) => setTab(String(v))}>
           <TabsList>
             <TabsTrigger value="request">Request Help</TabsTrigger>
             <TabsTrigger value="status">Rescue Status</TabsTrigger>

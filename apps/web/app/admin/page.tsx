@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParam } from "@/lib/useSearchParam";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,13 +28,15 @@ import dynamic from "next/dynamic";
 const LocationPickerModal = dynamic(() => import("@/components/LocationPickerModal"), { ssr: false });
 
 export default function AdminPage() {
+  const [tab, setTab] = useSearchParam("tab", "requests");
+
   return (
     <div className="min-h-screen">
       <Navbar />
       <div className="container mx-auto max-w-6xl p-6">
         <h1 className="text-2xl font-bold mb-6">Admin Coordination Panel</h1>
         <OverviewCards />
-        <Tabs defaultValue="requests" className="mt-6">
+        <Tabs value={tab} onValueChange={(v) => setTab(String(v))} className="mt-6">
           <TabsList>
             <TabsTrigger value="requests">Help Requests</TabsTrigger>
             <TabsTrigger value="volunteers">Volunteers</TabsTrigger>
@@ -86,7 +89,7 @@ function RequestsPanel() {
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
   const { data: volunteers = [] } = useSuggestedVolunteers(selectedRequestId);
   const assignMutation = useAssignVolunteer();
-  const [statusFilter, setStatusFilter] = useState("pending");
+  const [statusFilter, setStatusFilter] = useSearchParam("status", "pending");
 
   const { data: dashData } = useAdminDashboard();
   const allRequests = dashData?.requests ?? [];
@@ -178,7 +181,7 @@ function RequestsPanel() {
 function VolunteersPanel() {
   const { data: dashData } = useAdminDashboard();
   const volunteers = dashData?.volunteers ?? [];
-  const [filter, setFilter] = useState("all");
+  const [filter, setFilter] = useSearchParam("vfilter", "all");
 
   const filtered = filter === "all"
     ? volunteers
@@ -316,7 +319,7 @@ function ResourcesPanel() {
   const [longitude, setLongitude] = useState("");
   const [allocateId, setAllocateId] = useState<string | null>(null);
   const [allocateAmount, setAllocateAmount] = useState("");
-  const [typeFilter, setTypeFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useSearchParam("rtype", "all");
 
   const resources = mapData?.resources ?? [];
   const filtered = typeFilter === "all" ? resources : resources.filter((r) => r.type === typeFilter);
