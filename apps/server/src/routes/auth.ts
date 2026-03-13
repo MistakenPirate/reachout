@@ -6,7 +6,7 @@ import { db } from "../db/index.js";
 import { users } from "../db/schema.js";
 import { authenticate } from "../middleware/auth.js";
 
-const router: Router = Router();
+const   router: Router = Router();
 
 const register: RequestHandler = async (req, res) => {
   const { name, email, password, phone, role } = req.body;
