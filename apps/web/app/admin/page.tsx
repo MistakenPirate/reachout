@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAuthGuard } from "@/lib/useAuthGuard";
 import { useSearchParam } from "@/lib/useSearchParam";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,10 @@ import dynamic from "next/dynamic";
 const LocationPickerModal = dynamic(() => import("@/components/LocationPickerModal"), { ssr: false });
 
 export default function AdminPage() {
+  const { isAuthorized } = useAuthGuard(["admin"]);
   const [tab, setTab] = useSearchParam("tab", "requests");
+
+  if (!isAuthorized) return null;
 
   return (
     <div className="min-h-screen">

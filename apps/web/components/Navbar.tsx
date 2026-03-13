@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { useEffect, useCallback } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore } from "@/lib/stores/auth";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -32,10 +32,16 @@ const roleBadgeColors: Record<string, string> = {
 
 export default function Navbar() {
   const { user, logout, hydrate } = useAuthStore();
+  const router = useRouter();
 
   useEffect(() => {
     hydrate();
   }, [hydrate]);
+
+  const handleLogout = useCallback(() => {
+    logout();
+    router.push("/login");
+  }, [logout, router]);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -58,7 +64,7 @@ export default function Navbar() {
                 {user.role}
               </span>
               <span className="text-sm text-muted-foreground">{user.name}</span>
-              <Button variant="ghost" size="sm" onClick={logout}>
+              <Button variant="ghost" size="sm" onClick={handleLogout}>
                 Logout
               </Button>
             </>

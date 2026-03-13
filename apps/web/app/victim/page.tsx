@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAuthGuard } from "@/lib/useAuthGuard";
 import { useSearchParam } from "@/lib/useSearchParam";
 import { useMyRequests, useCreateHelpRequest, useResolveHelpRequest } from "@/lib/queries/helpRequests";
 import { useRescueStatus } from "@/lib/queries/rescue";
@@ -29,6 +30,7 @@ const statusVariant: Record<string, "default" | "secondary" | "destructive" | "o
 };
 
 export default function VictimPage() {
+  const { isAuthorized } = useAuthGuard(["victim"]);
   const [tab, setTab] = useSearchParam("tab", "request");
   const { data: requests = [], isLoading } = useMyRequests();
   const createMutation = useCreateHelpRequest();
@@ -79,6 +81,8 @@ export default function VictimPage() {
   }
 
   const activeRescues = rescueStatuses.filter((r) => r.status !== "resolved");
+
+  if (!isAuthorized) return null;
 
   return (
     <div className="min-h-screen">

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { registerUser } from "@/lib/api";
 import { useAuthStore } from "@/lib/stores/auth";
+import { getRoleHomePath } from "@/lib/useAuthGuard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,7 +31,7 @@ export default function RegisterPage() {
     try {
       const { user, token } = await registerUser({ name, email, password, phone, role });
       setAuth(user, token);
-      router.push("/dashboard");
+      router.push(getRoleHomePath(user.role));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");
     } finally {

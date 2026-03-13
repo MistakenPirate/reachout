@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useAuthGuard } from "@/lib/useAuthGuard";
 import { useSearchParam } from "@/lib/useSearchParam";
 import { useVolunteerProfile, useUpdateVolunteerProfile, useVolunteerMissions, useUpdateMissionStatus } from "@/lib/queries/volunteer";
 import { useMapData } from "@/lib/queries/map";
@@ -19,7 +20,10 @@ const ChatPanel = dynamic(() => import("@/components/ChatPanel"), { ssr: false }
 const ALL_SKILLS = ["medical", "search_rescue", "transport", "food", "shelter"] as const;
 
 export default function VolunteerPage() {
+  const { isAuthorized } = useAuthGuard(["volunteer"]);
   const [tab, setTab] = useSearchParam("tab", "profile");
+
+  if (!isAuthorized) return null;
 
   return (
     <div className="min-h-screen">

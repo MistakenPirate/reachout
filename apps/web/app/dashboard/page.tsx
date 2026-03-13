@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useAuthGuard } from "@/lib/useAuthGuard";
 import { useMapData } from "@/lib/queries/map";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +18,10 @@ const DisasterMap = dynamic(() => import("@/components/DisasterMap"), {
 });
 
 export default function DashboardPage() {
+  const { isAuthorized } = useAuthGuard();
   const { data, isLoading } = useMapData();
+
+  if (!isAuthorized) return null;
 
   const stats = [
     { label: "Active Zones", value: data.zones.length, icon: MapPinIcon, color: "bg-primary text-primary-foreground" },
