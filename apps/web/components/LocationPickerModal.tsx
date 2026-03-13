@@ -6,6 +6,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Button } from "./ui/button";
+import LocateControl from "./LocateControl";
 
 const pinIcon = new L.Icon({
   iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
@@ -66,6 +67,8 @@ export default function LocationPickerModal({ latitude, longitude, onSelect }: L
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             <ClickHandler onSelect={handleClick} />
+            <LocateControl onLocate={handleClick} />
+
             {pin && <Marker position={pin} icon={pinIcon} />}
           </MapContainer>
         </div>

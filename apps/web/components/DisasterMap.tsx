@@ -4,6 +4,7 @@ import { MapContainer, TileLayer, Circle, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { MapData } from "../lib/queries/map";
+import LocateControl from "./LocateControl";
 
 // Fix default marker icons in Next.js
 const victimIcon = new L.Icon({
@@ -55,6 +56,7 @@ export default function DisasterMap({ data }: DisasterMapProps) {
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
+      <LocateControl />
 
       {/* Disaster Zones as circles */}
       {data.zones.map((zone) => (
@@ -140,6 +142,43 @@ export default function DisasterMap({ data }: DisasterMapProps) {
           </Popup>
         </Marker>
       ))}
+
+      {/* Legend */}
+      <div className="leaflet-bottom leaflet-left" style={{ pointerEvents: "auto" }}>
+        <div className="leaflet-control bg-white/90 backdrop-blur-sm rounded-lg shadow-md p-3 m-3 text-xs space-y-1.5">
+          <p className="font-semibold text-sm mb-2">Legend</p>
+          <div className="flex items-center gap-2">
+            <span className="inline-block w-3 h-3 rounded-full bg-red-500" />
+            <span>Help Requests</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="inline-block w-3 h-3 rounded-full bg-green-500" />
+            <span>Volunteers</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="inline-block w-3 h-3 rounded-full bg-blue-500" />
+            <span>Resources</span>
+          </div>
+          <hr className="my-1.5 border-gray-200" />
+          <p className="font-medium">Disaster Zones (circles)</p>
+          <div className="flex items-center gap-2">
+            <span className="inline-block w-3 h-3 rounded-full border-2" style={{ borderColor: "#dc2626", backgroundColor: "#dc262633" }} />
+            <span>Critical</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="inline-block w-3 h-3 rounded-full border-2" style={{ borderColor: "#ea580c", backgroundColor: "#ea580c33" }} />
+            <span>High</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="inline-block w-3 h-3 rounded-full border-2" style={{ borderColor: "#f59e0b", backgroundColor: "#f59e0b33" }} />
+            <span>Medium</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="inline-block w-3 h-3 rounded-full border-2" style={{ borderColor: "#22c55e", backgroundColor: "#22c55e33" }} />
+            <span>Low</span>
+          </div>
+        </div>
+      </div>
     </MapContainer>
   );
 }
