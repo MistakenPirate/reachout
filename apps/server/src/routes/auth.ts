@@ -2,25 +2,21 @@ import { eq } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { Router, type RequestHandler } from "express";
+import { registerSchema, loginSchema } from "@repo/shared/schemas";
 import { db } from "../db/index.js";
 import { users } from "../db/schema.js";
 import { authenticate } from "../middleware/auth.js";
 
-const   router: Router = Router();
+const router: Router = Router();
 
 const register: RequestHandler = async (req, res) => {
-  const { name, email, password, phone, role } = req.body;
-
-  if (!name || !email || !password || !phone) {
-    res.status(400).json({ error: "name, email, password, and phone are required" });
+  const parsed = registerSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.flatten().fieldErrors });
     return;
   }
 
-  const validRoles = ["victim", "volunteer", "admin"];
-  if (role && !validRoles.includes(role)) {
-    res.status(400).json({ error: "role must be victim, volunteer, or admin" });
-    return;
-  }
+  const { name, email, password, phone, role } = parsed.data;
 
   const existing = await db.select({ id: users.id }).from(users).where(eq(users.email, email));
   if (existing.length > 0) {
@@ -37,7 +33,7 @@ const register: RequestHandler = async (req, res) => {
       email,
       password: hashedPassword,
       phone,
-      role: role || "victim",
+      role,
     })
     .returning({ id: users.id, name: users.name, email: users.email, role: users.role });
 
@@ -54,12 +50,13 @@ const register: RequestHandler = async (req, res) => {
 };
 
 const login: RequestHandler = async (req, res) => {
-  const { email, password } = req.body;
-
-  if (!email || !password) {
-    res.status(400).json({ error: "email and password are required" });
+  const parsed = loginSchema.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.flatten().fieldErrors });
     return;
   }
+
+  const { email, password } = parsed.data;
 
   const [user] = await db.select().from(users).where(eq(users.email, email));
   if (!user) {
