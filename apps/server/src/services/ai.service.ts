@@ -1,8 +1,8 @@
-import { GoogleGenAI } from "@google/genai";
+import Groq from "groq-sdk";
 import type { PriorityResult, DamageSummary, ChatMessage } from "@repo/shared/schemas";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
-const MODEL = "gemini-2.0-flash";
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY! });
+const MODEL = "llama-3.3-70b-versatile";
 
 export async function prioritizeRequests(
   requests: { id: string; emergencyType: string; peopleCount: number; createdAt: Date }[],
@@ -15,16 +15,15 @@ ${requests.map((r, i) => `${i + 1}. ID: ${r.id} | Type: ${r.emergencyType} | Peo
 Respond ONLY with a JSON array of objects with these fields: requestId, score, reasoning.
 Example: [{"requestId": "abc", "score": 9, "reasoning": "Medical emergency with 5 people, high urgency"}]`;
 
-  const response = await ai.models.generateContent({
+  const response = await groq.chat.completions.create({
     model: MODEL,
-    contents: prompt,
-    config: {
-      responseMimeType: "application/json",
-    },
+    messages: [{ role: "user", content: prompt }],
+    response_format: { type: "json_object" },
   });
 
-  const text = response.text ?? "[]";
-  return JSON.parse(text) as PriorityResult[];
+  const text = response.choices[0]?.message?.content ?? "[]";
+  const parsed = JSON.parse(text);
+  return Array.isArray(parsed) ? parsed : parsed.results ?? parsed.priorities ?? [];
 }
 
 export async function summarizeSocialMedia(keyword: string): Promise<DamageSummary> {
@@ -37,15 +36,13 @@ Provide a realistic damage assessment summary. Respond ONLY with a JSON object w
 - sentiment: string (overall public sentiment in one line)
 - summary: string (2-3 sentence overview)`;
 
-  const response = await ai.models.generateContent({
+  const response = await groq.chat.completions.create({
     model: MODEL,
-    contents: prompt,
-    config: {
-      responseMimeType: "application/json",
-    },
+    messages: [{ role: "user", content: prompt }],
+    response_format: { type: "json_object" },
   });
 
-  const text = response.text ?? "{}";
+  const text = response.choices[0]?.message?.content ?? "{}";
   return JSON.parse(text) as DamageSummary;
 }
 
@@ -55,19 +52,16 @@ export async function chatWithVictim(
 ): Promise<string> {
   const systemPrompt = `You are an emergency response assistant helping disaster victims stay safe. Be calm, clear, and concise. Provide actionable safety guidance.${emergencyType ? ` The user is experiencing a ${emergencyType} emergency.` : ""} Keep responses under 200 words. Focus on immediate safety, first aid, evacuation, and signaling for help.`;
 
-  const contents = [
-    { role: "user" as const, parts: [{ text: systemPrompt }] },
-    { role: "model" as const, parts: [{ text: "Understood. I'm here to help you stay safe. How can I assist you?" }] },
-    ...messages.map((m) => ({
-      role: (m.role === "assistant" ? "model" : "user") as "user" | "model",
-      parts: [{ text: m.content }],
-    })),
-  ];
-
-  const response = await ai.models.generateContent({
+  const response = await groq.chat.completions.create({
     model: MODEL,
-    contents,
+    messages: [
+      { role: "system", content: systemPrompt },
+      ...messages.map((m) => ({
+        role: m.role as "user" | "assistant",
+        content: m.content,
+      })),
+    ],
   });
 
-  return response.text ?? "I'm sorry, I couldn't generate a response. Please try again.";
+  return response.choices[0]?.message?.content ?? "I'm sorry, I couldn't generate a response. Please try again.";
 }

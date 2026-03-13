@@ -15,13 +15,13 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
-    "@google/genai": "^1.45.0",
     "@repo/shared": "workspace:^",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^17.3.1",
     "drizzle-orm": "^0.45.1",
     "express": "^5.1.0",
+    "groq-sdk": "^1.1.1",
     "jsonwebtoken": "^9.0.3",
     "postgres": "^3.4.8",
     "ws": "^8.19.0"
