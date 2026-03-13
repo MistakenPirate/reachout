@@ -14,6 +14,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import dynamic from "next/dynamic";
+
+const LocationPickerModal = dynamic(() => import("@/components/LocationPickerModal"), { ssr: false });
 
 const EMERGENCY_TYPES = ["medical", "flood", "fire", "earthquake", "other"] as const;
 
@@ -126,19 +129,19 @@ export default function VictimPage() {
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-2">
-                        <Label htmlFor="lat">Latitude</Label>
-                        <Input id="lat" type="number" step="any" value={latitude} onChange={(e) => setLatitude(e.target.value)} required placeholder="20.5937" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="lng">Longitude</Label>
-                        <Input id="lng" type="number" step="any" value={longitude} onChange={(e) => setLongitude(e.target.value)} required placeholder="78.9629" />
+                    <div className="space-y-2">
+                      <Label>Location</Label>
+                      <div className="flex items-center gap-2">
+                        <LocationPickerModal
+                          latitude={latitude}
+                          longitude={longitude}
+                          onSelect={(lat, lng) => { setLatitude(lat); setLongitude(lng); }}
+                        />
+                        <Button type="button" variant="outline" size="sm" onClick={detectLocation}>
+                          Detect my location
+                        </Button>
                       </div>
                     </div>
-                    <Button type="button" variant="outline" size="sm" onClick={detectLocation}>
-                      Detect my location
-                    </Button>
 
                     <div className="space-y-2">
                       <Label htmlFor="type">Emergency Type</Label>

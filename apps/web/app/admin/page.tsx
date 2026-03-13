@@ -22,6 +22,9 @@ import { useAdminDashboard } from "@/lib/queries/dashboard";
 import { usePrioritize, useSocialMediaSummary, type DamageSummary } from "@/lib/queries/ai";
 import { useMapData } from "@/lib/queries/map";
 import type { Severity, EmergencyType, ResourceType } from "@repo/shared/schemas";
+import dynamic from "next/dynamic";
+
+const LocationPickerModal = dynamic(() => import("@/components/LocationPickerModal"), { ssr: false });
 
 export default function AdminPage() {
   return (
@@ -258,9 +261,11 @@ function ZonesPanel() {
                 <Input id="zdesc" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Optional" />
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-3">
-              <div className="space-y-2"><Label htmlFor="zlat">Latitude</Label><Input id="zlat" type="number" step="any" value={latitude} onChange={(e) => setLatitude(e.target.value)} required /></div>
-              <div className="space-y-2"><Label htmlFor="zlng">Longitude</Label><Input id="zlng" type="number" step="any" value={longitude} onChange={(e) => setLongitude(e.target.value)} required /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Location</Label>
+                <LocationPickerModal latitude={latitude} longitude={longitude} onSelect={(lat, lng) => { setLatitude(lat); setLongitude(lng); }} />
+              </div>
               <div className="space-y-2"><Label htmlFor="zrad">Radius (km)</Label><Input id="zrad" type="number" step="any" value={radiusKm} onChange={(e) => setRadiusKm(e.target.value)} required /></div>
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -337,10 +342,12 @@ function ResourcesPanel() {
                 <Select value={type} onValueChange={(v) => v && setType(v as ResourceType)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="food">Food</SelectItem><SelectItem value="water">Water</SelectItem><SelectItem value="medical_supplies">Medical Supplies</SelectItem><SelectItem value="shelter_kit">Shelter Kit</SelectItem><SelectItem value="other">Other</SelectItem></SelectContent></Select>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2"><Label htmlFor="rqty">Quantity</Label><Input id="rqty" type="number" min={0} value={quantity} onChange={(e) => setQuantity(e.target.value)} required /></div>
-              <div className="space-y-2"><Label htmlFor="rlat">Latitude</Label><Input id="rlat" type="number" step="any" value={latitude} onChange={(e) => setLatitude(e.target.value)} required /></div>
-              <div className="space-y-2"><Label htmlFor="rlng">Longitude</Label><Input id="rlng" type="number" step="any" value={longitude} onChange={(e) => setLongitude(e.target.value)} required /></div>
+              <div className="space-y-2">
+                <Label>Location</Label>
+                <LocationPickerModal latitude={latitude} longitude={longitude} onSelect={(lat, lng) => { setLatitude(lat); setLongitude(lng); }} />
+              </div>
             </div>
             <Button type="submit" disabled={createResource.isPending}>{createResource.isPending ? "Adding..." : "Add Resource"}</Button>
           </form>

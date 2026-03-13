@@ -8,6 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import dynamic from "next/dynamic";
+
+const LocationPickerModal = dynamic(() => import("@/components/LocationPickerModal"), { ssr: false });
 
 const ALL_SKILLS = ["medical", "search_rescue", "transport", "food", "shelter"] as const;
 
@@ -115,19 +118,19 @@ export default function VolunteerPage() {
               </div>
 
               {/* Location */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="vlat">Latitude</Label>
-                  <Input id="vlat" type="number" step="any" value={latitude} onChange={(e) => setLatitude(e.target.value)} placeholder="20.5937" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="vlng">Longitude</Label>
-                  <Input id="vlng" type="number" step="any" value={longitude} onChange={(e) => setLongitude(e.target.value)} placeholder="78.9629" />
+              <div className="space-y-2">
+                <Label>Location</Label>
+                <div className="flex items-center gap-2">
+                  <LocationPickerModal
+                    latitude={latitude}
+                    longitude={longitude}
+                    onSelect={(lat, lng) => { setLatitude(lat); setLongitude(lng); }}
+                  />
+                  <Button type="button" variant="outline" size="sm" onClick={detectLocation}>
+                    Detect my location
+                  </Button>
                 </div>
               </div>
-              <Button type="button" variant="outline" size="sm" onClick={detectLocation}>
-                Detect my location
-              </Button>
 
               {error && <p className="text-sm text-destructive">{error}</p>}
               {success && <p className="text-sm text-green-600">{success}</p>}
