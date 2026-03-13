@@ -1,113 +1,11 @@
-import { eq } from "drizzle-orm";
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import { Router, type RequestHandler } from "express";
-import { registerSchema, loginSchema } from "@repo/shared/schemas";
-import { db } from "../db/index.js";
-import { users } from "../db/schema.js";
+import { Router } from "express";
+import * as authController from "../controllers/auth.controller.js";
 import { authenticate } from "../middleware/auth.js";
 
 const router: Router = Router();
 
-const register: RequestHandler = async (req, res) => {
-  const parsed = registerSchema.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.flatten().fieldErrors });
-    return;
-  }
-
-  const { name, email, password, phone, role } = parsed.data;
-
-  const existing = await db.select({ id: users.id }).from(users).where(eq(users.email, email));
-  if (existing.length > 0) {
-    res.status(409).json({ error: "Email already registered" });
-    return;
-  }
-
-  const hashedPassword = await bcrypt.hash(password, 10);
-
-  const [user] = await db
-    .insert(users)
-    .values({
-      name,
-      email,
-      password: hashedPassword,
-      phone,
-      role,
-    })
-    .returning({ id: users.id, name: users.name, email: users.email, role: users.role });
-
-  if (!user) {
-    res.status(500).json({ error: "Failed to create user" });
-    return;
-  }
-
-  const token = jwt.sign({ userId: user.id, role: user.role }, process.env.JWT_SECRET ?? "", {
-    expiresIn: "7d",
-  });
-
-  res.status(201).json({ user, token });
-};
-
-const login: RequestHandler = async (req, res) => {
-  const parsed = loginSchema.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.flatten().fieldErrors });
-    return;
-  }
-
-  const { email, password } = parsed.data;
-
-  const [user] = await db.select().from(users).where(eq(users.email, email));
-  if (!user) {
-    res.status(401).json({ error: "Invalid email or password" });
-    return;
-  }
-
-  const valid = await bcrypt.compare(password, user.password);
-  if (!valid) {
-    res.status(401).json({ error: "Invalid email or password" });
-    return;
-  }
-
-  const token = jwt.sign({ userId: user.id, role: user.role }, process.env.JWT_SECRET ?? "", {
-    expiresIn: "7d",
-  });
-
-  res.json({
-    user: { id: user.id, name: user.name, email: user.email, role: user.role },
-    token,
-  });
-};
-
-const me: RequestHandler = async (req, res) => {
-  if (!req.user) {
-    res.status(401).json({ error: "Not authenticated" });
-    return;
-  }
-
-  const [user] = await db
-    .select({
-      id: users.id,
-      name: users.name,
-      email: users.email,
-      phone: users.phone,
-      role: users.role,
-      createdAt: users.createdAt,
-    })
-    .from(users)
-    .where(eq(users.id, req.user.userId));
-
-  if (!user) {
-    res.status(404).json({ error: "User not found" });
-    return;
-  }
-
-  res.json({ user });
-};
-
-router.post("/register", register);
-router.post("/login", login);
-router.get("/me", authenticate, me);
+router.post("/register", authController.register);
+router.post("/login", authController.login);
+router.get("/me", authenticate, authController.me);
 
 export default router;
