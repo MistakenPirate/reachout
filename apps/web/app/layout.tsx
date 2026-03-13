@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { DM_Sans, Space_Mono } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { Providers } from "@/lib/providers";
 import "./globals.css";
 
-const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
+const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-sans" });
+const spaceMono = Space_Mono({ weight: ["400", "700"], subsets: ["latin"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
-  title: "Disaster Response Platform",
+  title: "ReachOut",
   description: "Real-time disaster response coordination",
 };
 
@@ -18,7 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={cn("min-h-screen bg-background font-sans antialiased", geist.variable)}>
+      <body className={cn("min-h-screen bg-background font-sans antialiased", dmSans.variable, spaceMono.variable)}>
         <Providers>{children}</Providers>
       </body>
     </html>
