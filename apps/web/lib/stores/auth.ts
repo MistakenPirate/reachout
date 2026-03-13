@@ -1,11 +1,5 @@
 import { create } from "zustand";
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-}
+import type { User } from "@repo/shared/schemas";
 
 interface AuthState {
   user: User | null;

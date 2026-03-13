@@ -1,4 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
+import type { DashboardSummary, DashboardRequest, DashboardVolunteer, DashboardResource, DashboardZone, DashboardData } from "@repo/shared/schemas";
+
+export type { DashboardSummary, DashboardRequest, DashboardVolunteer, DashboardResource, DashboardZone, DashboardData };
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
@@ -6,70 +9,6 @@ function authHeaders(): HeadersInit {
   if (typeof window === "undefined") return {};
   const token = localStorage.getItem("token");
   return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
-export interface DashboardSummary {
-  totalActiveDisasters: number;
-  pendingRequests: number;
-  assignedRequests: number;
-  inProgressRequests: number;
-  resolvedRequests: number;
-  availableVolunteers: number;
-  onMissionVolunteers: number;
-  totalResources: number;
-}
-
-export interface DashboardRequest {
-  id: string;
-  userId: string;
-  latitude: number;
-  longitude: number;
-  emergencyType: string;
-  peopleCount: number;
-  description: string | null;
-  status: string;
-  priorityScore: number | null;
-  assignedVolunteerId: string | null;
-  createdAt: string;
-  updatedAt: string;
-  userName: string | null;
-}
-
-export interface DashboardVolunteer {
-  id: string;
-  userId: string;
-  skills: string[];
-  latitude: number | null;
-  longitude: number | null;
-  status: string;
-  isAvailable: boolean;
-  userName: string | null;
-}
-
-export interface DashboardResource {
-  id: string;
-  type: string;
-  name: string;
-  quantity: number;
-  latitude: number;
-  longitude: number;
-  status: string;
-}
-
-export interface DashboardZone {
-  id: string;
-  name: string;
-  severity: string;
-  type: string;
-  status: string;
-}
-
-export interface DashboardData {
-  summary: DashboardSummary;
-  zones: DashboardZone[];
-  requests: DashboardRequest[];
-  volunteers: DashboardVolunteer[];
-  resources: DashboardResource[];
 }
 
 async function fetchDashboardData(): Promise<DashboardData> {

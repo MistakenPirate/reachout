@@ -1,4 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import type { PendingRequest, SuggestedVolunteer, Resource, CreateDisasterZoneInput, CreateResourceInput } from "@repo/shared/schemas";
+
+export type { PendingRequest, SuggestedVolunteer, Resource };
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
@@ -6,40 +9,6 @@ function authHeaders(): HeadersInit {
   if (typeof window === "undefined") return {};
   const token = localStorage.getItem("token");
   return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
-// Types
-export interface PendingRequest {
-  id: string;
-  latitude: number;
-  longitude: number;
-  emergencyType: string;
-  peopleCount: number;
-  description: string | null;
-  status: string;
-  priorityScore: number | null;
-  createdAt: string;
-  userName: string | null;
-}
-
-export interface SuggestedVolunteer {
-  id: string;
-  userId: string;
-  skills: string[];
-  latitude: number;
-  longitude: number;
-  userName: string | null;
-  distance: number;
-}
-
-export interface Resource {
-  id: string;
-  type: string;
-  name: string;
-  quantity: number;
-  latitude: number;
-  longitude: number;
-  status: string;
 }
 
 // Fetchers
@@ -68,7 +37,7 @@ async function assignVolunteerToRequest(data: { requestId: string; volunteerUser
   return res.json();
 }
 
-async function createZone(data: { name: string; description?: string; latitude: number; longitude: number; radiusKm: number; severity: string; type: string }) {
+async function createZone(data: CreateDisasterZoneInput) {
   const res = await fetch(`${API_URL}/api/admin/zones`, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...authHeaders() },
@@ -78,7 +47,7 @@ async function createZone(data: { name: string; description?: string; latitude: 
   return res.json();
 }
 
-async function createResource(data: { type: string; name: string; quantity: number; latitude: number; longitude: number }) {
+async function createResource(data: CreateResourceInput) {
   const res = await fetch(`${API_URL}/api/admin/resources`, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...authHeaders() },

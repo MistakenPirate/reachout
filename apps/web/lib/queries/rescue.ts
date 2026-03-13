@@ -1,4 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
+import type { RescueStatus } from "@repo/shared/schemas";
+
+export type { RescueStatus };
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
@@ -6,21 +9,6 @@ function authHeaders(): HeadersInit {
   if (typeof window === "undefined") return {};
   const token = localStorage.getItem("token");
   return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
-export interface RescueStatus {
-  id: string;
-  emergencyType: string;
-  peopleCount: number;
-  description: string | null;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
-  volunteer: {
-    name: string;
-    phone: string;
-    distance: number | null;
-  } | null;
 }
 
 async function fetchRescueStatus(): Promise<RescueStatus[]> {

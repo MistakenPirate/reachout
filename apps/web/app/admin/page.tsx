@@ -21,6 +21,7 @@ import {
 import { useAdminDashboard } from "@/lib/queries/dashboard";
 import { usePrioritize, useSocialMediaSummary, type DamageSummary } from "@/lib/queries/ai";
 import { useMapData } from "@/lib/queries/map";
+import type { Severity, EmergencyType, ResourceType } from "@repo/shared/schemas";
 
 export default function AdminPage() {
   return (
@@ -225,8 +226,8 @@ function ZonesPanel() {
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
   const [radiusKm, setRadiusKm] = useState("5");
-  const [severity, setSeverity] = useState("medium");
-  const [type, setType] = useState("other");
+  const [severity, setSeverity] = useState<Severity>("medium");
+  const [type, setType] = useState<EmergencyType>("other");
 
   const { data: dashData } = useAdminDashboard();
   const zones = dashData?.zones ?? [];
@@ -265,11 +266,11 @@ function ZonesPanel() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label>Severity</Label>
-                <Select value={severity} onValueChange={(v) => v && setSeverity(v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="low">Low</SelectItem><SelectItem value="medium">Medium</SelectItem><SelectItem value="high">High</SelectItem><SelectItem value="critical">Critical</SelectItem></SelectContent></Select>
+                <Select value={severity} onValueChange={(v) => v && setSeverity(v as Severity)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="low">Low</SelectItem><SelectItem value="medium">Medium</SelectItem><SelectItem value="high">High</SelectItem><SelectItem value="critical">Critical</SelectItem></SelectContent></Select>
               </div>
               <div className="space-y-2">
                 <Label>Type</Label>
-                <Select value={type} onValueChange={(v) => v && setType(v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="medical">Medical</SelectItem><SelectItem value="flood">Flood</SelectItem><SelectItem value="fire">Fire</SelectItem><SelectItem value="earthquake">Earthquake</SelectItem><SelectItem value="other">Other</SelectItem></SelectContent></Select>
+                <Select value={type} onValueChange={(v) => v && setType(v as EmergencyType)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="medical">Medical</SelectItem><SelectItem value="flood">Flood</SelectItem><SelectItem value="fire">Fire</SelectItem><SelectItem value="earthquake">Earthquake</SelectItem><SelectItem value="other">Other</SelectItem></SelectContent></Select>
               </div>
             </div>
             <Button type="submit" disabled={createZone.isPending}>{createZone.isPending ? "Creating..." : "Create Zone"}</Button>
@@ -304,7 +305,7 @@ function ResourcesPanel() {
   const createResource = useCreateResource();
   const allocateMutation = useAllocateResource();
   const [name, setName] = useState("");
-  const [type, setType] = useState("food");
+  const [type, setType] = useState<ResourceType>("food");
   const [quantity, setQuantity] = useState("");
   const [latitude, setLatitude] = useState("");
   const [longitude, setLongitude] = useState("");
@@ -333,7 +334,7 @@ function ResourcesPanel() {
               <div className="space-y-2"><Label htmlFor="rname">Name</Label><Input id="rname" value={name} onChange={(e) => setName(e.target.value)} required placeholder="e.g. Water Unit 1" /></div>
               <div className="space-y-2">
                 <Label>Type</Label>
-                <Select value={type} onValueChange={(v) => v && setType(v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="food">Food</SelectItem><SelectItem value="water">Water</SelectItem><SelectItem value="medical_supplies">Medical Supplies</SelectItem><SelectItem value="shelter_kit">Shelter Kit</SelectItem><SelectItem value="other">Other</SelectItem></SelectContent></Select>
+                <Select value={type} onValueChange={(v) => v && setType(v as ResourceType)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="food">Food</SelectItem><SelectItem value="water">Water</SelectItem><SelectItem value="medical_supplies">Medical Supplies</SelectItem><SelectItem value="shelter_kit">Shelter Kit</SelectItem><SelectItem value="other">Other</SelectItem></SelectContent></Select>
               </div>
             </div>
             <div className="grid grid-cols-3 gap-3">

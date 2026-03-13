@@ -1,4 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { PriorityResult, DamageSummary, ChatMessage } from "@repo/shared/schemas";
+
+export type { PriorityResult, DamageSummary, ChatMessage };
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
@@ -6,13 +9,6 @@ function authHeaders(): HeadersInit {
   if (typeof window === "undefined") return {};
   const token = localStorage.getItem("token");
   return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
-// AI Prioritization
-export interface PriorityResult {
-  requestId: string;
-  score: number;
-  reasoning: string;
 }
 
 async function runPrioritization(): Promise<PriorityResult[]> {
@@ -36,14 +32,6 @@ export function usePrioritize() {
 }
 
 // AI Social Media Summary
-export interface DamageSummary {
-  affectedAreas: string[];
-  estimatedDamageLevel: string;
-  keyNeeds: string[];
-  sentiment: string;
-  summary: string;
-}
-
 async function fetchSummary(keyword: string): Promise<DamageSummary> {
   const res = await fetch(`${API_URL}/api/ai/summarize`, {
     method: "POST",
@@ -59,11 +47,6 @@ export function useSocialMediaSummary() {
 }
 
 // AI Chatbot
-export interface ChatMessage {
-  role: "user" | "assistant";
-  content: string;
-}
-
 async function sendChat(data: { messages: ChatMessage[]; emergencyType?: string }): Promise<ChatMessage> {
   const res = await fetch(`${API_URL}/api/ai/chat`, {
     method: "POST",

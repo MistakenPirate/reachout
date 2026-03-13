@@ -1,14 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchVolunteerProfile, updateVolunteerProfile } from "../api";
+import type { VolunteerProfile } from "@repo/shared/schemas";
 
-export interface VolunteerProfile {
-  id: string;
-  skills: string[];
-  latitude: number | null;
-  longitude: number | null;
-  status: string;
-  isAvailable: boolean;
-}
+export type { VolunteerProfile };
 
 export function useVolunteerProfile() {
   return useQuery<VolunteerProfile>({
