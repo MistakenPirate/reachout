@@ -6,6 +6,9 @@ import authRoutes from "./routes/auth.js";
 import disasterRoutes from "./routes/disaster.js";
 import helpRequestRoutes from "./routes/helpRequest.js";
 import volunteerRoutes from "./routes/volunteer.js";
+import adminRoutes from "./routes/admin.js";
+import aiRoutes from "./routes/ai.js";
+import dashboardRoutes from "./routes/dashboard.js";
 import { initWebSocket } from "./ws.js";
 
 const app = express();
@@ -22,6 +25,9 @@ app.use("/api/auth", authRoutes);
 app.use("/api/disaster", disasterRoutes);
 app.use("/api/help-requests", helpRequestRoutes);
 app.use("/api/volunteers", volunteerRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/ai", aiRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 const server = createServer(app);
 initWebSocket(server);
