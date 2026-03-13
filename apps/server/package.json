@@ -15,6 +15,7 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "@google/genai": "^1.45.0",
     "@repo/shared": "workspace:^",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",

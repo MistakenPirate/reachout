@@ -1,103 +1,73 @@
-// Dummy AI service — replace with real Claude API calls later
+import { GoogleGenAI } from "@google/genai";
+import type { PriorityResult, DamageSummary, ChatMessage } from "@repo/shared/schemas";
 
-export interface PriorityResult {
-  requestId: string;
-  score: number;
-  reasoning: string;
-}
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+const MODEL = "gemini-2.0-flash";
 
 export async function prioritizeRequests(
   requests: { id: string; emergencyType: string; peopleCount: number; createdAt: Date }[],
 ): Promise<PriorityResult[]> {
-  // Dummy scoring based on emergency type + people count + age
-  const typeWeights: Record<string, number> = {
-    medical: 8,
-    earthquake: 7,
-    fire: 6,
-    flood: 5,
-    other: 3,
-  };
+  const prompt = `You are a disaster response AI. Prioritize the following help requests on a scale of 1-10 (10 = most urgent).
 
-  return requests.map((req) => {
-    const typeScore = typeWeights[req.emergencyType] ?? 3;
-    const peopleScore = Math.min(req.peopleCount / 5, 2);
-    const ageHours = (Date.now() - new Date(req.createdAt).getTime()) / (1000 * 60 * 60);
-    const ageScore = Math.min(ageHours / 2, 1);
-    const score = Math.min(Math.round(typeScore + peopleScore + ageScore), 10);
+Requests:
+${requests.map((r, i) => `${i + 1}. ID: ${r.id} | Type: ${r.emergencyType} | People: ${r.peopleCount} | Created: ${r.createdAt}`).join("\n")}
 
-    const reasonings: Record<string, string> = {
-      medical: "Medical emergencies require immediate attention",
-      earthquake: "Structural collapse risk — high urgency",
-      fire: "Active fire hazard — time-sensitive",
-      flood: "Flooding with potential displacement",
-      other: "General emergency reported",
-    };
+Respond ONLY with a JSON array of objects with these fields: requestId, score, reasoning.
+Example: [{"requestId": "abc", "score": 9, "reasoning": "Medical emergency with 5 people, high urgency"}]`;
 
-    return {
-      requestId: req.id,
-      score,
-      reasoning: `${reasonings[req.emergencyType] || "Emergency reported"} (${req.peopleCount} people, ${ageHours.toFixed(1)}h ago)`,
-    };
+  const response = await ai.models.generateContent({
+    model: MODEL,
+    contents: prompt,
+    config: {
+      responseMimeType: "application/json",
+    },
   });
-}
 
-export interface DamageSummary {
-  affectedAreas: string[];
-  estimatedDamageLevel: string;
-  keyNeeds: string[];
-  sentiment: string;
-  summary: string;
+  const text = response.text ?? "[]";
+  return JSON.parse(text) as PriorityResult[];
 }
 
 export async function summarizeSocialMedia(keyword: string): Promise<DamageSummary> {
-  // Dummy response — replace with Claude API call
-  return {
-    affectedAreas: [`${keyword} central district`, `${keyword} riverside`, `${keyword} east suburbs`],
-    estimatedDamageLevel: "Severe",
-    keyNeeds: ["Clean drinking water", "Medical supplies", "Temporary shelter", "Search and rescue teams"],
-    sentiment: "Urgent — multiple distress reports",
-    summary: `Based on social media analysis for "${keyword}": widespread damage reported across 3 areas. Multiple residents reporting flooding, structural damage, and need for evacuation. Emergency services are stretched thin. Priority needs include clean water, medical aid, and temporary shelters.`,
-  };
-}
+  const prompt = `You are a disaster response analyst. Simulate an analysis of social media posts related to "${keyword}" during a disaster scenario.
 
-export interface ChatMessage {
-  role: "user" | "assistant";
-  content: string;
+Provide a realistic damage assessment summary. Respond ONLY with a JSON object with these fields:
+- affectedAreas: string[] (3-5 specific area names)
+- estimatedDamageLevel: string ("Minor" | "Moderate" | "Severe" | "Critical")
+- keyNeeds: string[] (4-6 priority needs)
+- sentiment: string (overall public sentiment in one line)
+- summary: string (2-3 sentence overview)`;
+
+  const response = await ai.models.generateContent({
+    model: MODEL,
+    contents: prompt,
+    config: {
+      responseMimeType: "application/json",
+    },
+  });
+
+  const text = response.text ?? "{}";
+  return JSON.parse(text) as DamageSummary;
 }
 
 export async function chatWithVictim(
   messages: ChatMessage[],
   emergencyType?: string,
 ): Promise<string> {
-  // Dummy chatbot response — replace with Claude API call
-  const lastMessage = messages[messages.length - 1]?.content.toLowerCase() ?? "";
+  const systemPrompt = `You are an emergency response assistant helping disaster victims stay safe. Be calm, clear, and concise. Provide actionable safety guidance.${emergencyType ? ` The user is experiencing a ${emergencyType} emergency.` : ""} Keep responses under 200 words. Focus on immediate safety, first aid, evacuation, and signaling for help.`;
 
-  if (lastMessage.includes("first aid") || lastMessage.includes("hurt") || lastMessage.includes("injured")) {
-    return "If someone is injured: 1) Apply pressure to any bleeding wounds with clean cloth. 2) Keep the person still and warm. 3) Do NOT move someone with a potential spinal injury. 4) Call emergency services immediately. Note: This is general guidance — please seek professional medical help as soon as possible.";
-  }
+  const contents = [
+    { role: "user" as const, parts: [{ text: systemPrompt }] },
+    { role: "model" as const, parts: [{ text: "Understood. I'm here to help you stay safe. How can I assist you?" }] },
+    ...messages.map((m) => ({
+      role: (m.role === "assistant" ? "model" : "user") as "user" | "model",
+      parts: [{ text: m.content }],
+    })),
+  ];
 
-  if (lastMessage.includes("evacuate") || lastMessage.includes("leave") || lastMessage.includes("escape")) {
-    return "For evacuation: 1) Move to higher ground if flooding. 2) Stay away from damaged buildings. 3) Follow marked evacuation routes if available. 4) Take essentials: water, phone, ID, medications. 5) Help others who need assistance but don't put yourself at risk.";
-  }
+  const response = await ai.models.generateContent({
+    model: MODEL,
+    contents,
+  });
 
-  if (lastMessage.includes("signal") || lastMessage.includes("help") || lastMessage.includes("rescue")) {
-    return "To signal for rescue: 1) Use a flashlight or phone screen at night. 2) Create visible markers with bright clothing or sheets. 3) Make noise at regular intervals — whistle, bang on objects. 4) Stay in one visible location if possible. 5) If you have phone signal, share your GPS coordinates.";
-  }
-
-  if (lastMessage.includes("water") || lastMessage.includes("drink") || lastMessage.includes("food")) {
-    return "For water safety: 1) Only drink sealed bottled water or water you've boiled for 1 minute. 2) Avoid flood water — it may be contaminated. 3) Ration available supplies. For food: eat perishable items first, then move to canned/dried goods.";
-  }
-
-  const typeGuidance: Record<string, string> = {
-    flood: "Flood safety: Move to the highest point in your building. Do NOT walk through flowing water. 15cm of fast water can knock you down. Avoid electrical equipment. Stay away from rivers and drains.",
-    fire: "Fire safety: Stay low — smoke rises. Cover mouth with wet cloth. Feel doors before opening (hot = fire behind). Use stairs, never elevators. If trapped, seal door gaps and signal from window.",
-    earthquake: "Earthquake safety: If shaking — DROP, COVER, HOLD ON. Stay under sturdy furniture. After shaking stops, move outside carefully. Watch for aftershocks. Check for gas leaks.",
-    medical: "While waiting for medical help: Keep the patient calm and comfortable. Monitor their breathing. If they're conscious, keep them talking. Note their symptoms for when help arrives.",
-  };
-
-  if (emergencyType && typeGuidance[emergencyType]) {
-    return typeGuidance[emergencyType] + "\n\nHow else can I help you stay safe?";
-  }
-
-  return "I'm here to help you stay safe. I can provide guidance on: first aid, evacuation routes, signaling for rescue, water/food safety, or specific emergency types. What do you need help with?";
+  return response.text ?? "I'm sorry, I couldn't generate a response. Please try again.";
 }
