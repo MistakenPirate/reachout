@@ -1,12 +1,14 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useMapData } from "../../lib/queries/map";
+import { useMapData } from "@/lib/queries/map";
+import { Card, CardContent } from "@/components/ui/card";
+import Navbar from "@/components/Navbar";
 
-const DisasterMap = dynamic(() => import("../../components/DisasterMap"), {
+const DisasterMap = dynamic(() => import("@/components/DisasterMap"), {
   ssr: false,
   loading: () => (
-    <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div className="flex h-full items-center justify-center text-muted-foreground">
       Loading map...
     </div>
   ),
@@ -15,33 +17,38 @@ const DisasterMap = dynamic(() => import("../../components/DisasterMap"), {
 export default function DashboardPage() {
   const { data, isLoading } = useMapData();
 
+  const stats = [
+    { label: "Active Zones", value: data.zones.length },
+    { label: "Help Requests", value: data.helpRequests.length },
+    { label: "Volunteers", value: data.volunteers.length },
+    { label: "Resources", value: data.resources.length },
+  ];
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
-      <header
-        style={{
-          padding: "1rem",
-          borderBottom: "1px solid #e5e7eb",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <h1 style={{ fontSize: "1.25rem", fontWeight: 700 }}>Disaster Response Dashboard</h1>
-        <div style={{ display: "flex", gap: "1.5rem", fontSize: "0.875rem" }}>
-          <span>Zones: {data.zones.length}</span>
-          <span>Requests: {data.helpRequests.length}</span>
-          <span>Volunteers: {data.volunteers.length}</span>
-          <span>Resources: {data.resources.length}</span>
-        </div>
-      </header>
-      <main style={{ flex: 1, position: "relative" }}>
-        {isLoading ? (
-          <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            Loading...
-          </div>
-        ) : (
-          <DisasterMap data={data} />
-        )}
+    <div className="flex h-screen flex-col">
+      <Navbar />
+      <div className="flex gap-4 p-4">
+        {stats.map((stat) => (
+          <Card key={stat.label} className="flex-1">
+            <CardContent className="p-4">
+              <p className="text-sm text-muted-foreground">{stat.label}</p>
+              <p className="text-2xl font-bold">{stat.value}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      <main className="flex-1 px-4 pb-4">
+        <Card className="h-full overflow-hidden">
+          <CardContent className="h-full p-0">
+            {isLoading ? (
+              <div className="flex h-full items-center justify-center text-muted-foreground">
+                Loading...
+              </div>
+            ) : (
+              <DisasterMap data={data} />
+            )}
+          </CardContent>
+        </Card>
       </main>
     </div>
   );

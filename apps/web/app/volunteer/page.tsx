@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useVolunteerProfile, useUpdateVolunteerProfile } from "../../lib/queries/volunteer";
+import { useVolunteerProfile, useUpdateVolunteerProfile } from "@/lib/queries/volunteer";
+import Navbar from "@/components/Navbar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 const ALL_SKILLS = ["medical", "search_rescue", "transport", "food", "shelter"] as const;
 
@@ -10,18 +16,17 @@ export default function VolunteerPage() {
   const updateMutation = useUpdateVolunteerProfile();
 
   const [skills, setSkills] = useState<string[]>([]);
-  const [latitude, setLatitude] = useState<number | "">("");
-  const [longitude, setLongitude] = useState<number | "">("");
+  const [latitude, setLatitude] = useState("");
+  const [longitude, setLongitude] = useState("");
   const [isAvailable, setIsAvailable] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Sync form when profile loads
   useEffect(() => {
     if (profile) {
       setSkills(profile.skills || []);
-      if (profile.latitude != null) setLatitude(profile.latitude);
-      if (profile.longitude != null) setLongitude(profile.longitude);
+      if (profile.latitude != null) setLatitude(String(profile.latitude));
+      if (profile.longitude != null) setLongitude(String(profile.longitude));
       setIsAvailable(profile.isAvailable);
     }
   }, [profile]);
@@ -34,8 +39,8 @@ export default function VolunteerPage() {
     if (!navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        setLatitude(pos.coords.latitude);
-        setLongitude(pos.coords.longitude);
+        setLatitude(String(pos.coords.latitude));
+        setLongitude(String(pos.coords.longitude));
       },
       () => setError("Could not detect location."),
     );
@@ -45,12 +50,11 @@ export default function VolunteerPage() {
     e.preventDefault();
     setError("");
     setSuccess("");
-
     updateMutation.mutate(
       {
         skills,
-        latitude: latitude !== "" ? Number(latitude) : undefined,
-        longitude: longitude !== "" ? Number(longitude) : undefined,
+        latitude: latitude ? Number(latitude) : undefined,
+        longitude: longitude ? Number(longitude) : undefined,
         isAvailable,
       },
       {
@@ -60,89 +64,105 @@ export default function VolunteerPage() {
     );
   }
 
-  if (isLoading) return <div style={{ padding: "2rem", textAlign: "center" }}>Loading...</div>;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen">
+        <Navbar />
+        <div className="flex items-center justify-center p-12 text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ maxWidth: 600, margin: "0 auto", padding: "2rem" }}>
-      <h1 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "1.5rem" }}>Volunteer Profile</h1>
+    <div className="min-h-screen">
+      <Navbar />
+      <div className="container mx-auto max-w-xl space-y-6 p-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Volunteer Profile</CardTitle>
+            <CardDescription>Set your skills, location, and availability to get matched with disaster zones.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSave} className="space-y-5">
+              {/* Availability */}
+              <div className="flex items-center justify-between">
+                <Label>Availability</Label>
+                <Button
+                  type="button"
+                  variant={isAvailable ? "default" : "secondary"}
+                  size="sm"
+                  onClick={() => setIsAvailable(!isAvailable)}
+                >
+                  {isAvailable ? "Available" : "Unavailable"}
+                </Button>
+              </div>
 
-      <form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: "1.25rem", padding: "1.5rem", border: "1px solid #e5e7eb", borderRadius: 8 }}>
-        {/* Availability toggle */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span style={{ fontWeight: 600 }}>Availability</span>
-          <button
-            type="button"
-            onClick={() => setIsAvailable(!isAvailable)}
-            style={{
-              padding: "0.5rem 1.25rem",
-              borderRadius: 20,
-              border: "none",
-              fontWeight: 600,
-              cursor: "pointer",
-              color: "white",
-              background: isAvailable ? "#22c55e" : "#6b7280",
-            }}
-          >
-            {isAvailable ? "Available" : "Unavailable"}
-          </button>
-        </div>
+              {/* Skills */}
+              <div className="space-y-2">
+                <Label>Skills</Label>
+                <div className="flex flex-wrap gap-2">
+                  {ALL_SKILLS.map((skill) => (
+                    <Badge
+                      key={skill}
+                      variant={skills.includes(skill) ? "default" : "outline"}
+                      className="cursor-pointer select-none"
+                      onClick={() => toggleSkill(skill)}
+                    >
+                      {skill.replace("_", " ")}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
 
-        {/* Skills multi-select */}
-        <div>
-          <label style={{ display: "block", fontSize: "0.875rem", marginBottom: 8, fontWeight: 500 }}>Skills</label>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-            {ALL_SKILLS.map((skill) => (
-              <button
-                key={skill}
-                type="button"
-                onClick={() => toggleSkill(skill)}
-                style={{
-                  padding: "0.4rem 0.9rem",
-                  borderRadius: 16,
-                  border: "1px solid",
-                  borderColor: skills.includes(skill) ? "#3b82f6" : "#d1d5db",
-                  background: skills.includes(skill) ? "#3b82f6" : "white",
-                  color: skills.includes(skill) ? "white" : "#374151",
-                  cursor: "pointer",
-                  fontSize: "0.8rem",
-                }}
-              >
-                {skill.replace("_", " ")}
-              </button>
-            ))}
-          </div>
-        </div>
+              {/* Location */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="vlat">Latitude</Label>
+                  <Input id="vlat" type="number" step="any" value={latitude} onChange={(e) => setLatitude(e.target.value)} placeholder="20.5937" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="vlng">Longitude</Label>
+                  <Input id="vlng" type="number" step="any" value={longitude} onChange={(e) => setLongitude(e.target.value)} placeholder="78.9629" />
+                </div>
+              </div>
+              <Button type="button" variant="outline" size="sm" onClick={detectLocation}>
+                Detect my location
+              </Button>
 
-        {/* Location */}
-        <div style={{ display: "flex", gap: "0.5rem", alignItems: "end" }}>
-          <div style={{ flex: 1 }}>
-            <label style={{ display: "block", fontSize: "0.875rem", marginBottom: 4 }}>Latitude</label>
-            <input type="number" step="any" value={latitude} onChange={(e) => setLatitude(e.target.value ? Number(e.target.value) : "")} style={{ width: "100%", padding: "0.5rem", border: "1px solid #d1d5db", borderRadius: 4 }} />
-          </div>
-          <div style={{ flex: 1 }}>
-            <label style={{ display: "block", fontSize: "0.875rem", marginBottom: 4 }}>Longitude</label>
-            <input type="number" step="any" value={longitude} onChange={(e) => setLongitude(e.target.value ? Number(e.target.value) : "")} style={{ width: "100%", padding: "0.5rem", border: "1px solid #d1d5db", borderRadius: 4 }} />
-          </div>
-          <button type="button" onClick={detectLocation} style={{ padding: "0.5rem 1rem", background: "#f3f4f6", border: "1px solid #d1d5db", borderRadius: 4, cursor: "pointer", whiteSpace: "nowrap" }}>
-            Detect
-          </button>
-        </div>
+              {error && <p className="text-sm text-destructive">{error}</p>}
+              {success && <p className="text-sm text-green-600">{success}</p>}
 
-        {error && <p style={{ color: "#dc2626", fontSize: "0.875rem" }}>{error}</p>}
-        {success && <p style={{ color: "#22c55e", fontSize: "0.875rem" }}>{success}</p>}
+              <Button type="submit" className="w-full" disabled={updateMutation.isPending}>
+                {updateMutation.isPending ? "Saving..." : "Save Profile"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
 
-        <button type="submit" disabled={updateMutation.isPending} style={{ padding: "0.75rem", background: "#3b82f6", color: "white", border: "none", borderRadius: 4, cursor: "pointer", fontWeight: 600 }}>
-          {updateMutation.isPending ? "Saving..." : "Save Profile"}
-        </button>
-      </form>
-
-      {profile && (
-        <div style={{ marginTop: "1.5rem", padding: "1rem", background: "#f9fafb", borderRadius: 8, fontSize: "0.875rem" }}>
-          <p><strong>Status:</strong> {profile.status}</p>
-          <p><strong>Skills:</strong> {profile.skills.length > 0 ? profile.skills.join(", ") : "None"}</p>
-          <p><strong>Location:</strong> {profile.latitude != null ? `${profile.latitude}, ${profile.longitude}` : "Not set"}</p>
-        </div>
-      )}
+        {profile && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Current Profile</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Status</span>
+                <Badge variant={profile.isAvailable ? "default" : "secondary"}>
+                  {profile.status}
+                </Badge>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Skills</span>
+                <span>{profile.skills.length > 0 ? profile.skills.join(", ") : "None"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Location</span>
+                <span>{profile.latitude != null ? `${profile.latitude}, ${profile.longitude}` : "Not set"}</span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }
