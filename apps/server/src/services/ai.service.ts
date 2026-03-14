@@ -10,10 +10,10 @@ export async function prioritizeRequests(
   const prompt = `You are a disaster response AI. Prioritize the following help requests on a scale of 1-10 (10 = most urgent).
 
 Requests:
-${requests.map((r, i) => `${i + 1}. ID: ${r.id} | Type: ${r.emergencyType} | People: ${r.peopleCount} | Created: ${r.createdAt}`).join("\n")}
+${requests.map((r, i) => `${i + 1}. ID: ${r.id} | Type: ${r.emergencyType} | People: ${r.peopleCount} | Created: ${r.createdAt.toISOString()}`).join("\n")}
 
-Respond ONLY with a JSON array of objects with these fields: requestId, score, reasoning.
-Example: [{"requestId": "abc", "score": 9, "reasoning": "Medical emergency with 5 people, high urgency"}]`;
+Respond with a JSON object containing a "results" key with an array of objects. Each object must have: requestId (string), score (number 1-10), reasoning (string).
+Example: {"results": [{"requestId": "abc", "score": 9, "reasoning": "Medical emergency with 5 people, high urgency"}]}`;
 
   const response = await groq.chat.completions.create({
     model: MODEL,
@@ -21,9 +21,13 @@ Example: [{"requestId": "abc", "score": 9, "reasoning": "Medical emergency with 
     response_format: { type: "json_object" },
   });
 
-  const text = response.choices[0]?.message?.content ?? "[]";
+  const text = response.choices[0]?.message?.content ?? "{}";
   const parsed = JSON.parse(text);
-  return Array.isArray(parsed) ? parsed : parsed.results ?? parsed.priorities ?? [];
+  // Extract array from whichever key the model used
+  const arr = Array.isArray(parsed)
+    ? parsed
+    : Object.values(parsed).find((v) => Array.isArray(v)) as PriorityResult[] | undefined;
+  return arr ?? [];
 }
 
 interface SearchResult {
@@ -91,11 +95,23 @@ ${searchContext}Based on the search results above${searchResults.length === 0 ? 
   return parsed;
 }
 
-export async function chatWithVictim(
+export async function chat(
   messages: ChatMessage[],
+  role: string,
+  context: string,
   emergencyType?: string,
 ): Promise<string> {
-  const systemPrompt = `You are an emergency response assistant helping disaster victims stay safe. Be calm, clear, and concise. Provide actionable safety guidance.${emergencyType ? ` The user is experiencing a ${emergencyType} emergency.` : ""} Keep responses under 200 words. Focus on immediate safety, first aid, evacuation, and signaling for help.`;
+  const basePrompt = role === "victim"
+    ? `You are an emergency response assistant helping a disaster victim. Be calm, clear, and concise. Provide actionable safety guidance.${emergencyType ? ` The user is experiencing a ${emergencyType} emergency.` : ""} Focus on immediate safety, first aid, evacuation, and signaling for help.`
+    : `You are an emergency response assistant helping a volunteer responder. Be clear and concise. Provide actionable guidance on rescue procedures, first aid, and coordination.`;
+
+  const systemPrompt = `${basePrompt}
+
+You have access to the following real-time data about the user's situation. Use this to answer questions about assigned volunteers, victims, distances, statuses, etc.
+
+${context}
+
+Keep responses under 200 words.`;
 
   const response = await groq.chat.completions.create({
     model: MODEL,
