@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useAuthGuard } from "@/lib/useAuthGuard";
 import { useSearchParam } from "@/lib/useSearchParam";
 import { useMyRequests, useCreateHelpRequest, useResolveHelpRequest } from "@/lib/queries/helpRequests";
@@ -30,6 +30,14 @@ const statusVariant: Record<string, "default" | "secondary" | "destructive" | "o
 };
 
 export default function VictimPage() {
+  return (
+    <Suspense>
+      <VictimPageContent />
+    </Suspense>
+  );
+}
+
+function VictimPageContent() {
   const { isAuthorized } = useAuthGuard(["victim"]);
   const [tab, setTab] = useSearchParam("tab", "request");
   const [reqPage, setReqPage] = useState(0);

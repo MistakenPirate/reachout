@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useAuthGuard } from "@/lib/useAuthGuard";
 import { useSearchParam } from "@/lib/useSearchParam";
 import Navbar from "@/components/Navbar";
@@ -32,6 +32,14 @@ import dynamic from "next/dynamic";
 const LocationPickerModal = dynamic(() => import("@/components/LocationPickerModal"), { ssr: false });
 
 export default function AdminPage() {
+  return (
+    <Suspense>
+      <AdminPageContent />
+    </Suspense>
+  );
+}
+
+function AdminPageContent() {
   const { isAuthorized } = useAuthGuard(["admin"]);
   const [tab, setTab] = useSearchParam("tab", "requests");
 
