@@ -23,3 +23,33 @@ export async function createResource(input: CreateResourceInput) {
   if (!resource) throw new Error("Failed to create resource");
   return resource;
 }
+
+export async function getZonesPaginated(page: number, limit: number) {
+  const offset = page * limit;
+  const [data, total] = await Promise.all([
+    disasterRepo.findActiveZonesPaginated(limit, offset),
+    disasterRepo.countActiveZones(),
+  ]);
+  return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
+}
+
+export async function getResourcesPaginated(page: number, limit: number) {
+  const offset = page * limit;
+  const [data, total] = await Promise.all([
+    disasterRepo.findResourcesPaginated(limit, offset),
+    disasterRepo.countResources(),
+  ]);
+  return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
+}
+
+export async function deleteDisasterZone(id: string) {
+  const [zone] = await disasterRepo.deleteZone(id);
+  if (!zone) throw new Error("Zone not found");
+  return zone;
+}
+
+export async function deleteResource(id: string) {
+  const [resource] = await disasterRepo.deleteResource(id);
+  if (!resource) throw new Error("Resource not found");
+  return resource;
+}

@@ -32,7 +32,9 @@ const statusVariant: Record<string, "default" | "secondary" | "destructive" | "o
 export default function VictimPage() {
   const { isAuthorized } = useAuthGuard(["victim"]);
   const [tab, setTab] = useSearchParam("tab", "request");
-  const { data: requests = [], isLoading } = useMyRequests();
+  const [reqPage, setReqPage] = useState(0);
+  const { data: reqData, isLoading } = useMyRequests(reqPage);
+  const requests = reqData?.data ?? [];
   const createMutation = useCreateHelpRequest();
   const resolveMutation = useResolveHelpRequest();
   const { data: rescueStatuses = [], isLoading: rescueLoading } = useRescueStatus();
@@ -74,6 +76,7 @@ export default function VictimPage() {
         onSuccess: () => {
           setDescription("");
           setPeopleCount("1");
+          setReqPage(0);
         },
         onError: (err) => setError(err.message),
       },
@@ -163,7 +166,7 @@ export default function VictimPage() {
                 <CardContent>
                   {isLoading ? (
                     <p className="text-muted-foreground">Loading...</p>
-                  ) : requests.length === 0 ? (
+                  ) : requests.length === 0 && reqPage === 0 ? (
                     <p className="text-muted-foreground">No requests yet.</p>
                   ) : (
                     <div className="space-y-3">
@@ -196,6 +199,16 @@ export default function VictimPage() {
                           )}
                         </div>
                       ))}
+                      {(reqData?.totalPages ?? 1) > 1 && (
+                        <div className="flex items-center justify-between pt-2">
+                          <span className="text-sm text-muted-foreground">{reqData?.total ?? 0} total</span>
+                          <div className="flex items-center gap-2">
+                            <Button size="sm" variant="outline" onClick={() => setReqPage((p) => p - 1)} disabled={reqPage <= 0}>Previous</Button>
+                            <span className="text-sm text-muted-foreground">{reqPage + 1} / {reqData?.totalPages ?? 1}</span>
+                            <Button size="sm" variant="outline" onClick={() => setReqPage((p) => p + 1)} disabled={reqPage >= (reqData?.totalPages ?? 1) - 1}>Next</Button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </CardContent>

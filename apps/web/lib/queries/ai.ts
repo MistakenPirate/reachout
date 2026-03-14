@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import type { PriorityResult, DamageSummary, ChatMessage } from "@repo/shared/schemas";
 
 export type { PriorityResult, DamageSummary, ChatMessage };
@@ -25,9 +26,11 @@ export function usePrioritize() {
   return useMutation({
     mutationFn: runPrioritization,
     onSuccess: () => {
+      toast.success("Prioritization complete");
       qc.invalidateQueries({ queryKey: ["admin-pending-requests"] });
       qc.invalidateQueries({ queryKey: ["admin-dashboard"] });
     },
+    onError: (err) => toast.error(err.message),
   });
 }
 
@@ -43,7 +46,10 @@ async function fetchSummary(keyword: string): Promise<DamageSummary> {
 }
 
 export function useSocialMediaSummary() {
-  return useMutation({ mutationFn: fetchSummary });
+  return useMutation({
+    mutationFn: fetchSummary,
+    onError: (err) => toast.error(err.message),
+  });
 }
 
 // AI Chatbot

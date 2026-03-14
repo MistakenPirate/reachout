@@ -49,7 +49,7 @@ export default function DashboardPage() {
         ))}
       </div>
       <main className="flex-1 px-4 pb-4">
-        <Card className="h-full overflow-hidden">
+        <Card className="h-full overflow-hidden relative z-0">
           <CardContent className="h-full p-0">
             {isLoading ? (
               <div className="flex h-full items-center justify-center text-muted-foreground">

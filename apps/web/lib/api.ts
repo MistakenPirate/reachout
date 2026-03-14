@@ -67,12 +67,6 @@ export async function createHelpRequest(data: {
   return json;
 }
 
-export async function fetchMyRequests() {
-  const res = await fetch(`${API_URL}/api/help-requests/mine`, { headers: authHeaders() });
-  if (!res.ok) throw new Error("Failed to fetch requests");
-  return res.json();
-}
-
 export async function resolveHelpRequest(id: string) {
   const res = await fetch(`${API_URL}/api/help-requests/${id}/resolve`, {
     method: "PATCH",

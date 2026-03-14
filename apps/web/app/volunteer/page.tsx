@@ -207,7 +207,7 @@ function MissionsPanel() {
           <CardDescription>See help requests, volunteers, and resources nearby.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[400px] rounded-md overflow-hidden">
+          <div className="h-[400px] rounded-md overflow-hidden relative z-0">
             <DisasterMap data={mapData ?? { zones: [], helpRequests: [], volunteers: [], resources: [] }} />
           </div>
         </CardContent>

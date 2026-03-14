@@ -19,10 +19,13 @@ import {
   useCreateZone,
   useCreateResource,
   useAllocateResource,
+  useDeleteZone,
+  useDeleteResource,
+  useZonesPaginated,
+  useResourcesPaginated,
 } from "@/lib/queries/admin";
 import { useAdminDashboard } from "@/lib/queries/dashboard";
 import { usePrioritize, useSocialMediaSummary, type DamageSummary } from "@/lib/queries/ai";
-import { useMapData } from "@/lib/queries/map";
 import type { Severity, EmergencyType, ResourceType } from "@repo/shared/schemas";
 import dynamic from "next/dynamic";
 
@@ -166,7 +169,10 @@ function RequestsPanel() {
                     size="sm"
                     onClick={(e) => {
                       e.stopPropagation();
-                      assignMutation.mutate({ requestId: selectedRequestId!, volunteerUserId: vol.userId });
+                      assignMutation.mutate(
+                        { requestId: selectedRequestId!, volunteerUserId: vol.userId },
+                        { onSuccess: () => setSelectedRequestId(null) }
+                      );
                     }}
                     disabled={assignMutation.isPending}
                   >
@@ -231,6 +237,10 @@ function VolunteersPanel() {
 
 function ZonesPanel() {
   const createZone = useCreateZone();
+  const deleteZoneMutation = useDeleteZone();
+  const [zonePage, setZonePage] = useState(0);
+  const { data: zonesData } = useZonesPaginated(zonePage);
+  const zones = (zonesData?.data ?? []) as { id: string; name: string; type: string; severity: string }[];
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [latitude, setLatitude] = useState("");
@@ -238,9 +248,6 @@ function ZonesPanel() {
   const [radiusKm, setRadiusKm] = useState("5");
   const [severity, setSeverity] = useState<Severity>("medium");
   const [type, setType] = useState<EmergencyType>("other");
-
-  const { data: dashData } = useAdminDashboard();
-  const zones = dashData?.zones ?? [];
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -298,13 +305,15 @@ function ZonesPanel() {
               {zones.map((z) => (
                 <div key={z.id} className="flex items-center justify-between rounded-lg border p-3">
                   <span className="font-medium">{z.name}</span>
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-2">
                     <Badge variant="outline">{z.type}</Badge>
                     <Badge variant={z.severity === "critical" ? "destructive" : "secondary"}>{z.severity}</Badge>
+                    <Button size="sm" variant="destructive" onClick={() => deleteZoneMutation.mutate(z.id)} disabled={deleteZoneMutation.isPending}>Delete</Button>
                   </div>
                 </div>
               ))}
             </div>
+            <PaginationControls page={zonePage} totalPages={zonesData?.totalPages ?? 1} total={zonesData?.total ?? 0} setPage={setZonePage} />
           </CardContent>
         </Card>
       )}
@@ -312,10 +321,27 @@ function ZonesPanel() {
   );
 }
 
+function PaginationControls({ page, totalPages, total, setPage }: { page: number; totalPages: number; total: number; setPage: (p: number) => void }) {
+  if (totalPages <= 1) return null;
+  return (
+    <div className="flex items-center justify-between pt-3">
+      <span className="text-sm text-muted-foreground">{total} total</span>
+      <div className="flex items-center gap-2">
+        <Button size="sm" variant="outline" onClick={() => setPage(page - 1)} disabled={page <= 0}>Previous</Button>
+        <span className="text-sm text-muted-foreground">{page + 1} / {totalPages}</span>
+        <Button size="sm" variant="outline" onClick={() => setPage(page + 1)} disabled={page >= totalPages - 1}>Next</Button>
+      </div>
+    </div>
+  );
+}
+
 function ResourcesPanel() {
-  const { data: mapData } = useMapData();
   const createResource = useCreateResource();
   const allocateMutation = useAllocateResource();
+  const deleteResourceMutation = useDeleteResource();
+  const [resPage, setResPage] = useState(0);
+  const { data: resData } = useResourcesPaginated(resPage);
+  const resources = (resData?.data ?? []) as { id: string; name: string; type: string; quantity: number }[];
   const [name, setName] = useState("");
   const [type, setType] = useState<ResourceType>("food");
   const [quantity, setQuantity] = useState("");
@@ -323,10 +349,6 @@ function ResourcesPanel() {
   const [longitude, setLongitude] = useState("");
   const [allocateId, setAllocateId] = useState<string | null>(null);
   const [allocateAmount, setAllocateAmount] = useState("");
-  const [typeFilter, setTypeFilter] = useSearchParam("rtype", "all");
-
-  const resources = mapData?.resources ?? [];
-  const filtered = typeFilter === "all" ? resources : resources.filter((r) => r.type === typeFilter);
 
   function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -362,45 +384,37 @@ function ResourcesPanel() {
       </Card>
 
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Current Resources</CardTitle>
-            <Select value={typeFilter} onValueChange={(v) => v && setTypeFilter(v)}>
-              <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="food">Food</SelectItem>
-                <SelectItem value="water">Water</SelectItem>
-                <SelectItem value="medical_supplies">Medical</SelectItem>
-                <SelectItem value="shelter_kit">Shelter</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardHeader>
+        <CardHeader><CardTitle>Current Resources</CardTitle></CardHeader>
         <CardContent>
-          {filtered.length === 0 ? (
+          {resources.length === 0 ? (
             <p className="text-muted-foreground">No resources.</p>
           ) : (
-            <div className="space-y-2">
-              {filtered.map((res) => (
-                <div key={res.id} className="flex items-center justify-between rounded-lg border p-3">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{res.name}</span>
-                    <Badge variant="secondary">{res.type.replace("_", " ")}</Badge>
-                    <Badge variant={res.quantity > 0 ? "outline" : "destructive"}>Qty: {res.quantity}</Badge>
-                  </div>
-                  {allocateId === res.id ? (
+            <>
+              <div className="space-y-2">
+                {resources.map((res) => (
+                  <div key={res.id} className="flex items-center justify-between rounded-lg border p-3">
                     <div className="flex items-center gap-2">
-                      <Input type="number" min={1} max={res.quantity} className="w-20" value={allocateAmount} onChange={(e) => setAllocateAmount(e.target.value)} />
-                      <Button size="sm" onClick={() => allocateMutation.mutate({ resourceId: res.id, amount: Number(allocateAmount) }, { onSuccess: () => { setAllocateId(null); setAllocateAmount(""); } })} disabled={allocateMutation.isPending || !allocateAmount}>OK</Button>
-                      <Button size="sm" variant="ghost" onClick={() => setAllocateId(null)}>X</Button>
+                      <span className="font-medium">{res.name}</span>
+                      <Badge variant="secondary">{res.type.replace("_", " ")}</Badge>
+                      <Badge variant={res.quantity > 0 ? "outline" : "destructive"}>Qty: {res.quantity}</Badge>
                     </div>
-                  ) : (
-                    <Button size="sm" variant="outline" onClick={() => setAllocateId(res.id)} disabled={res.quantity <= 0}>Allocate</Button>
-                  )}
-                </div>
-              ))}
-            </div>
+                    {allocateId === res.id ? (
+                      <div className="flex items-center gap-2">
+                        <Input type="number" min={1} max={res.quantity} className="w-20" value={allocateAmount} onChange={(e) => setAllocateAmount(e.target.value)} />
+                        <Button size="sm" onClick={() => allocateMutation.mutate({ resourceId: res.id, amount: Number(allocateAmount) }, { onSuccess: () => { setAllocateId(null); setAllocateAmount(""); } })} disabled={allocateMutation.isPending || !allocateAmount}>OK</Button>
+                        <Button size="sm" variant="ghost" onClick={() => setAllocateId(null)}>X</Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Button size="sm" variant="outline" onClick={() => setAllocateId(res.id)} disabled={res.quantity <= 0}>Allocate</Button>
+                        <Button size="sm" variant="destructive" onClick={() => deleteResourceMutation.mutate(res.id)} disabled={deleteResourceMutation.isPending}>Delete</Button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <PaginationControls page={resPage} totalPages={resData?.totalPages ?? 1} total={resData?.total ?? 0} setPage={setResPage} />
+            </>
           )}
         </CardContent>
       </Card>

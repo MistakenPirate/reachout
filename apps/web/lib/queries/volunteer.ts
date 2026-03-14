@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { fetchVolunteerProfile, updateVolunteerProfile, fetchVolunteerMissions, updateMissionStatus } from "../api";
 import type { VolunteerProfile } from "@repo/shared/schemas";
 
@@ -33,9 +34,11 @@ export function useUpdateVolunteerProfile() {
   return useMutation({
     mutationFn: updateVolunteerProfile,
     onSuccess: () => {
+      toast.success("Profile updated");
       queryClient.invalidateQueries({ queryKey: ["volunteer-profile"] });
       queryClient.invalidateQueries({ queryKey: ["map-data"] });
     },
+    onError: (err) => toast.error(err.message),
   });
 }
 
@@ -53,9 +56,11 @@ export function useUpdateMissionStatus() {
   return useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) => updateMissionStatus(id, status),
     onSuccess: () => {
+      toast.success("Mission status updated");
       queryClient.invalidateQueries({ queryKey: ["volunteer-missions"] });
       queryClient.invalidateQueries({ queryKey: ["volunteer-profile"] });
       queryClient.invalidateQueries({ queryKey: ["map-data"] });
     },
+    onError: (err) => toast.error(err.message),
   });
 }

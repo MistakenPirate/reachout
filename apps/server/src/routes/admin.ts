@@ -13,10 +13,14 @@ router.get("/requests/:id/volunteers", adminController.getSuggestedVolunteers);
 router.post("/requests/:id/assign", adminController.assignVolunteer);
 
 // Disaster zones
+router.get("/zones", adminController.getZones);
 router.post("/zones", adminController.createZone);
+router.delete("/zones/:id", adminController.deleteZone);
 
 // Resources
+router.get("/resources", adminController.getResources);
 router.post("/resources", adminController.createResource);
+router.delete("/resources/:id", adminController.deleteResource);
 router.post("/resources/:id/allocate", adminController.allocateResource);
 
 export default router;

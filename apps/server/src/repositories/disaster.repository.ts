@@ -1,4 +1,4 @@
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, desc, count } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { disasterZones, helpRequests, volunteers, resources, users } from "../db/schema.js";
 
@@ -148,6 +148,45 @@ export function decrementResourceQuantity(id: string, amount: number) {
     .set({ quantity: sql`${resources.quantity} - ${amount}` })
     .where(and(eq(resources.id, id)))
     .returning();
+}
+
+// -- Paginated queries --
+
+export function findActiveZonesPaginated(limit: number, offset: number) {
+  return db.select().from(disasterZones).where(eq(disasterZones.status, "active")).limit(limit).offset(offset);
+}
+
+export async function countActiveZones() {
+  const [row] = await db.select({ count: count() }).from(disasterZones).where(eq(disasterZones.status, "active"));
+  return row?.count ?? 0;
+}
+
+export function findResourcesPaginated(limit: number, offset: number) {
+  return db.select().from(resources).limit(limit).offset(offset);
+}
+
+export async function countResources() {
+  const [row] = await db.select({ count: count() }).from(resources);
+  return row?.count ?? 0;
+}
+
+export function findHelpRequestsByUserPaginated(userId: string, limit: number, offset: number) {
+  return db.select().from(helpRequests).where(eq(helpRequests.userId, userId)).orderBy(desc(helpRequests.createdAt)).limit(limit).offset(offset);
+}
+
+export async function countHelpRequestsByUser(userId: string) {
+  const [row] = await db.select({ count: count() }).from(helpRequests).where(eq(helpRequests.userId, userId));
+  return row?.count ?? 0;
+}
+
+// -- Delete --
+
+export function deleteZone(id: string) {
+  return db.delete(disasterZones).where(eq(disasterZones.id, id)).returning();
+}
+
+export function deleteResource(id: string) {
+  return db.delete(resources).where(eq(resources.id, id)).returning();
 }
 
 // -- All data queries for admin dashboard --

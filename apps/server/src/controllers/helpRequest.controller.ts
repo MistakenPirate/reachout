@@ -26,8 +26,10 @@ export const create: RequestHandler = async (req, res) => {
 export const getMyRequests: RequestHandler = async (req, res) => {
   if (!req.user) { res.status(401).json({ error: "Not authenticated" }); return; }
 
-  const requests = await helpRequestService.getUserRequests(req.user.userId);
-  res.json(requests);
+  const page = Math.max(0, parseInt(req.query.page as string) || 0);
+  const limit = Math.min(50, Math.max(1, parseInt(req.query.limit as string) || 5));
+  const result = await helpRequestService.getUserRequestsPaginated(req.user.userId, page, limit);
+  res.json(result);
 };
 
 export const resolve: RequestHandler = async (req, res) => {

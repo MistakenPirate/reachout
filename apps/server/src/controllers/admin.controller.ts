@@ -5,6 +5,24 @@ import * as disasterService from "../services/disaster.service.js";
 import { ServiceError } from "../services/auth.service.js";
 import { broadcast } from "../ws.js";
 
+function parsePagination(query: Record<string, unknown>) {
+  const page = Math.max(0, parseInt(query.page as string) || 0);
+  const limit = Math.min(50, Math.max(1, parseInt(query.limit as string) || 5));
+  return { page, limit };
+}
+
+export const getZones: RequestHandler = async (req, res) => {
+  const { page, limit } = parsePagination(req.query as Record<string, unknown>);
+  const result = await disasterService.getZonesPaginated(page, limit);
+  res.json(result);
+};
+
+export const getResources: RequestHandler = async (req, res) => {
+  const { page, limit } = parsePagination(req.query as Record<string, unknown>);
+  const result = await disasterService.getResourcesPaginated(page, limit);
+  res.json(result);
+};
+
 export const getPendingRequests: RequestHandler = async (_req, res) => {
   const requests = await adminService.getAllPendingRequests();
   res.json(requests);
@@ -63,6 +81,36 @@ export const createResource: RequestHandler = async (req, res) => {
   const resource = await disasterService.createResource(parsed.data);
   broadcast({ type: "resource_allocated", payload: resource });
   res.status(201).json(resource);
+};
+
+export const deleteZone: RequestHandler = async (req, res) => {
+  const id = req.params.id as string;
+  try {
+    const zone = await disasterService.deleteDisasterZone(id);
+    broadcast({ type: "disaster_zone_updated", payload: zone });
+    res.json(zone);
+  } catch (err) {
+    if (err instanceof Error && err.message === "Zone not found") {
+      res.status(404).json({ error: "Zone not found" });
+      return;
+    }
+    throw err;
+  }
+};
+
+export const deleteResource: RequestHandler = async (req, res) => {
+  const id = req.params.id as string;
+  try {
+    const resource = await disasterService.deleteResource(id);
+    broadcast({ type: "resource_allocated", payload: resource });
+    res.json(resource);
+  } catch (err) {
+    if (err instanceof Error && err.message === "Resource not found") {
+      res.status(404).json({ error: "Resource not found" });
+      return;
+    }
+    throw err;
+  }
 };
 
 export const allocateResource: RequestHandler = async (req, res) => {
