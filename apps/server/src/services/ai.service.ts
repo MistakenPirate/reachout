@@ -26,15 +26,58 @@ Example: [{"requestId": "abc", "score": 9, "reasoning": "Medical emergency with 
   return Array.isArray(parsed) ? parsed : parsed.results ?? parsed.priorities ?? [];
 }
 
-export async function summarizeSocialMedia(keyword: string): Promise<DamageSummary> {
-  const prompt = `You are a disaster response analyst. Simulate an analysis of social media posts related to "${keyword}" during a disaster scenario.
+interface SearchResult {
+  snippet: string;
+  url: string;
+}
 
-Provide a realistic damage assessment summary. Respond ONLY with a JSON object with these fields:
-- affectedAreas: string[] (3-5 specific area names)
+function decodeEntities(str: string) {
+  return str.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#x27;/g, "'").replace(/<[^>]*>/g, "").trim();
+}
+
+async function webSearch(query: string, timeRange = "w"): Promise<SearchResult[]> {
+  try {
+    const url = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}&df=${timeRange}`;
+    const res = await fetch(url, {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; ReachOut/1.0)" },
+    });
+    const html = await res.text();
+
+    const results: SearchResult[] = [];
+    const resultRegex = /class="result__url"[^>]*href="([^"]*)"[\s\S]*?class="result__snippet"[^>]*>([\s\S]*?)<\/a>/g;
+    let match;
+    while ((match = resultRegex.exec(html)) !== null && results.length < 8) {
+      const rawUrl = decodeEntities(match[1]!);
+      const snippet = decodeEntities(match[2]!);
+      if (snippet.length > 20) {
+        const finalUrl = rawUrl.startsWith("//duckduckgo.com/l/?uddg=")
+          ? decodeURIComponent(rawUrl.replace("//duckduckgo.com/l/?uddg=", "").split("&")[0]!)
+          : rawUrl.startsWith("http") ? rawUrl : `https://${rawUrl}`;
+        results.push({ snippet, url: finalUrl });
+      }
+    }
+    return results;
+  } catch (err) {
+    console.error("[webSearch] error:", err);
+    return [];
+  }
+}
+
+export async function summarizeSocialMedia(keyword: string, timeRange = "w"): Promise<DamageSummary> {
+  const searchResults = await webSearch(`${keyword} disaster damage report latest news`, timeRange);
+
+  const searchContext = searchResults.length > 0
+    ? `Here are real web search results about "${keyword}":\n${searchResults.map((r, i) => `${i + 1}. ${r.snippet}`).join("\n")}\n\n`
+    : "";
+
+  const prompt = `You are a disaster response analyst. Analyze the following web search results about "${keyword}" and provide a damage assessment summary based on the real information found.
+
+${searchContext}Based on the search results above${searchResults.length === 0 ? " (no results found, use your general knowledge)" : ""}, provide a damage assessment. Respond ONLY with a JSON object with these fields:
+- affectedAreas: string[] (3-5 specific area names mentioned or relevant)
 - estimatedDamageLevel: string ("Minor" | "Moderate" | "Severe" | "Critical")
 - keyNeeds: string[] (4-6 priority needs)
 - sentiment: string (overall public sentiment in one line)
-- summary: string (2-3 sentence overview)`;
+- summary: string (2-3 sentence overview based on the search results)`;
 
   const response = await groq.chat.completions.create({
     model: MODEL,
@@ -43,7 +86,9 @@ Provide a realistic damage assessment summary. Respond ONLY with a JSON object w
   });
 
   const text = response.choices[0]?.message?.content ?? "{}";
-  return JSON.parse(text) as DamageSummary;
+  const parsed = JSON.parse(text) as DamageSummary;
+  parsed.sources = searchResults.map((r) => ({ snippet: r.snippet, url: r.url }));
+  return parsed;
 }
 
 export async function chatWithVictim(

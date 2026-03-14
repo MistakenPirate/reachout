@@ -35,11 +35,11 @@ export function usePrioritize() {
 }
 
 // AI Social Media Summary
-async function fetchSummary(keyword: string): Promise<DamageSummary> {
+async function fetchSummary(data: { keyword: string; timeRange: string }): Promise<DamageSummary> {
   const res = await fetch(`${API_URL}/api/ai/summarize`, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...authHeaders() },
-    body: JSON.stringify({ keyword }),
+    body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Failed to get summary");
   return res.json();

@@ -426,6 +426,7 @@ function AIPanel() {
   const prioritize = usePrioritize();
   const summarize = useSocialMediaSummary();
   const [keyword, setKeyword] = useState("");
+  const [timeRange, setTimeRange] = useState("Past Week");
   const [summary, setSummary] = useState<DamageSummary | null>(null);
 
   return (
@@ -460,7 +461,7 @@ function AIPanel() {
       <Card>
         <CardHeader>
           <CardTitle>AI Damage Summarization</CardTitle>
-          <CardDescription>Analyze social media posts about a disaster zone.</CardDescription>
+          <CardDescription>Search the web for real disaster reports and analyze damage.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex gap-2">
@@ -469,8 +470,19 @@ function AIPanel() {
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
             />
+            <Select value={timeRange} onValueChange={(v) => v && setTimeRange(v)}>
+              <SelectTrigger className="w-36 shrink-0"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Past 24h">Past 24h</SelectItem>
+                <SelectItem value="Past Week">Past Week</SelectItem>
+                <SelectItem value="Past Month">Past Month</SelectItem>
+              </SelectContent>
+            </Select>
             <Button
-              onClick={() => summarize.mutate(keyword, { onSuccess: (data) => setSummary(data) })}
+              onClick={() => {
+                const timeCode: Record<string, string> = { "Past 24h": "d", "Past Week": "w", "Past Month": "m" };
+                summarize.mutate({ keyword, timeRange: timeCode[timeRange] ?? "w" }, { onSuccess: (data) => setSummary(data) });
+              }}
               disabled={summarize.isPending || !keyword}
             >
               {summarize.isPending ? "Analyzing..." : "Analyze"}
@@ -500,6 +512,20 @@ function AIPanel() {
                   <ul className="list-disc list-inside">{summary.keyNeeds.map((n) => <li key={n}>{n}</li>)}</ul>
                 </div>
               </div>
+              {summary.sources && summary.sources.length > 0 && (
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">Web Sources ({summary.sources.length})</p>
+                  <ul className="space-y-1">
+                    {summary.sources.map((s, i) => (
+                      <li key={i} className="text-xs text-muted-foreground border-l-2 border-muted pl-2">
+                        <a href={s.url} target="_blank" rel="noopener noreferrer" className="hover:text-foreground underline underline-offset-2">
+                          {s.snippet}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
           )}
         </CardContent>

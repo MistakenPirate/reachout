@@ -27,14 +27,14 @@ export const prioritizeRequests: RequestHandler = async (_req, res) => {
 };
 
 export const summarizeSocialMedia: RequestHandler = async (req, res) => {
-  const { keyword } = req.body;
+  const { keyword, timeRange } = req.body;
   if (!keyword || typeof keyword !== "string") {
     res.status(400).json({ error: "keyword is required" });
     return;
   }
 
   try {
-    const summary = await aiService.summarizeSocialMedia(keyword);
+    const summary = await aiService.summarizeSocialMedia(keyword, timeRange || "w");
     res.json(summary);
   } catch (err) {
     console.error("[AI summarize] error:", err);

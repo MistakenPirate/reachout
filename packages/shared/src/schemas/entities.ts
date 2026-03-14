@@ -186,6 +186,7 @@ export const damageSummarySchema = z.object({
   keyNeeds: z.array(z.string()),
   sentiment: z.string(),
   summary: z.string(),
+  sources: z.array(z.object({ snippet: z.string(), url: z.string() })).optional(),
 });
 export type DamageSummary = z.infer<typeof damageSummarySchema>;
 
