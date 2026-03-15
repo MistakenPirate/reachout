@@ -13,7 +13,7 @@ export async function clearDatabase() {
 export async function seedDatabase() {
   const password = await bcrypt.hash("password123", 10);
 
-  const [admin1] = await db
+  await db
     .insert(schema.users)
     .values([
       { name: "Admin User", email: "admin@reachout.io", password, phone: "+919876543210", role: "admin" },
