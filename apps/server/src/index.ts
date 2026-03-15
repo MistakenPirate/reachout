@@ -9,6 +9,7 @@ import volunteerRoutes from "./routes/volunteer.js";
 import adminRoutes from "./routes/admin.js";
 import aiRoutes from "./routes/ai.js";
 import dashboardRoutes from "./routes/dashboard.js";
+import resetDbRoutes from "./routes/resetDb.js";
 import { initWebSocket } from "./ws.js";
 
 const app = express();
@@ -28,6 +29,7 @@ app.use("/api/volunteers", volunteerRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/reset-db", resetDbRoutes);
 
 const server = createServer(app);
 initWebSocket(server);
