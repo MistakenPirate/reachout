@@ -6,8 +6,8 @@
     {
       "id": "title",
       "type": "text",
-      "x": 334.12983718546957,
-      "y": 20.14167800578207,
+      "x": 324.1618933852967,
+      "y": -9.079282922472146,
       "width": 732.023681640625,
       "height": 45,
       "text": "Disaster Response Coordination Platform",
@@ -23,11 +23,11 @@
       "angle": 0,
       "roundness": null,
       "seed": 1,
-      "version": 4,
-      "versionNonce": 432532894,
+      "version": 43,
+      "versionNonce": 603552657,
       "isDeleted": false,
       "boundElements": [],
-      "updated": 1773581516406,
+      "updated": 1773581830875,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -43,8 +43,8 @@
     {
       "id": "subtitle",
       "type": "text",
-      "x": 450,
-      "y": 70,
+      "x": 413.6948720141562,
+      "y": 45.12189876585751,
       "width": 500,
       "height": 25,
       "text": "Turborepo Monorepo Architecture",
@@ -60,11 +60,11 @@
       "angle": 0,
       "roundness": null,
       "seed": 2,
-      "version": 2,
-      "versionNonce": 1796964482,
+      "version": 41,
+      "versionNonce": 1043109521,
       "isDeleted": false,
       "boundElements": [],
-      "updated": 1773581352317,
+      "updated": 1773581832559,
       "link": null,
       "locked": false,
       "groupIds": [],
@@ -830,16 +830,16 @@
       "link": null,
       "locked": false,
       "startBinding": {
-        "mode": "orbit",
         "elementId": "victim-box",
+        "mode": "orbit",
         "fixedPoint": [
           0.7330031984653205,
           0.26699680153467925
         ]
       },
       "endBinding": {
-        "mode": "orbit",
         "elementId": "frontend-box",
+        "mode": "orbit",
         "fixedPoint": [
           0,
           0.5001
@@ -889,16 +889,16 @@
       "link": null,
       "locked": false,
       "startBinding": {
-        "mode": "orbit",
         "elementId": "volunteer-box",
+        "mode": "orbit",
         "fixedPoint": [
           0.5001598818455317,
           0.49984011815446855
         ]
       },
       "endBinding": {
-        "mode": "orbit",
         "elementId": "frontend-box",
+        "mode": "orbit",
         "fixedPoint": [
           0,
           0.5001
@@ -948,16 +948,16 @@
       "link": null,
       "locked": false,
       "startBinding": {
-        "mode": "orbit",
         "elementId": "admin-box",
+        "mode": "orbit",
         "fixedPoint": [
           0.7329119577803082,
           0.7329119577803072
         ]
       },
       "endBinding": {
-        "mode": "orbit",
         "elementId": "frontend-box",
+        "mode": "orbit",
         "fixedPoint": [
           0,
           0.5001
@@ -1534,16 +1534,16 @@
       "link": null,
       "locked": false,
       "startBinding": {
-        "mode": "orbit",
         "elementId": "frontend-box",
+        "mode": "orbit",
         "fixedPoint": [
           0.7189418218174808,
           0.28105817818251955
         ]
       },
       "endBinding": {
-        "mode": "orbit",
         "elementId": "server-box",
+        "mode": "orbit",
         "fixedPoint": [
           0.2512495165712811,
           0.25124951657128153
@@ -1629,16 +1629,16 @@
       "link": null,
       "locked": false,
       "startBinding": {
-        "mode": "orbit",
         "elementId": "frontend-box",
+        "mode": "orbit",
         "fixedPoint": [
           0.636313793831707,
           0.6363137938317069
         ]
       },
       "endBinding": {
-        "mode": "orbit",
         "elementId": "server-box",
+        "mode": "orbit",
         "fixedPoint": [
           0,
           0.5001
@@ -1833,16 +1833,16 @@
       "link": null,
       "locked": false,
       "startBinding": {
-        "mode": "orbit",
         "elementId": "server-box",
+        "mode": "orbit",
         "fixedPoint": [
           0.6904941311293389,
           0.30950586887066217
         ]
       },
       "endBinding": {
-        "mode": "orbit",
         "elementId": "db-box",
+        "mode": "orbit",
         "fixedPoint": [
           0,
           0.5001
@@ -2037,16 +2037,16 @@
       "link": null,
       "locked": false,
       "startBinding": {
-        "mode": "orbit",
         "elementId": "server-box",
+        "mode": "orbit",
         "fixedPoint": [
           0.6919559994536022,
           0.6919559994536021
         ]
       },
       "endBinding": {
-        "mode": "orbit",
         "elementId": "groq-box",
+        "mode": "orbit",
         "fixedPoint": [
           0,
           0.5001
@@ -2428,6 +2428,43 @@
       "originalText": "Real-time\nBroadcast",
       "autoResize": true,
       "lineHeight": 1.6071428571428572
+    },
+    {
+      "id": "6o9Ww8y7JTGFa2yCZkLDC",
+      "type": "text",
+      "x": 438.5086339219398,
+      "y": -168.48979751026823,
+      "width": 428.5696272165092,
+      "height": 126.10929134591078,
+      "angle": 0,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "index": "b00",
+      "roundness": null,
+      "seed": 919107615,
+      "version": 298,
+      "versionNonce": 1539558993,
+      "isDeleted": false,
+      "boundElements": null,
+      "updated": 1773581840392,
+      "link": null,
+      "locked": false,
+      "text": "Reachout",
+      "fontSize": 100.8874330767287,
+      "fontFamily": 6,
+      "textAlign": "center",
+      "verticalAlign": "top",
+      "containerId": null,
+      "originalText": "Reachout",
+      "autoResize": true,
+      "lineHeight": 1.25
     }
   ],
   "appState": {
