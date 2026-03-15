@@ -10,6 +10,42 @@ services:
       POSTGRES_DB: disaster_response
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hackvita -d disaster_response"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  server:
+    build:
+      context: .
+      dockerfile: apps/server/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      DATABASE_URL: postgresql://hackvita:hackvita@db:5432/disaster_response
+      JWT_SECRET: change-me-in-production
+      PORT: "4000"
+      # GROQ_API_KEY: # set in .env file
+    env_file:
+      - path: apps/server/.env
+        required: false
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:4000
+    depends_on:
+      - server
 
 volumes:
   pgdata:
