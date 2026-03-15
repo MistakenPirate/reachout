@@ -19,7 +19,7 @@ app.use(cors());
 app.use(express.json());
 
 app.get("/api/health", (_req, res) => {
-  res.json({ status: "ok" });
+	res.json({ status: "ok" });
 });
 
 app.use("/api/auth", authRoutes);
@@ -35,5 +35,5 @@ const server = createServer(app);
 initWebSocket(server);
 
 server.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+	console.log(`Server running on http://localhost:${PORT}`);
 });
