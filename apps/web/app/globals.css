@@ -140,3 +140,19 @@
 		@apply font-sans;
 	}
 }
+
+.material-symbols-outlined {
+	font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.serif-display {
+	font-family: var(--font-headline), 'Newsreader', serif;
+}
+
+.font-body {
+	font-family: var(--font-body), 'Work Sans', sans-serif;
+}
+
+.ghost-border {
+	box-shadow: 0 0 0 1px rgba(190, 201, 196, 0.15);
+}
